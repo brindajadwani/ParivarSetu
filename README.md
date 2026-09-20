@@ -1,40 +1,334 @@
-# ParivarSetu (પરિવાર સેતુ)
-### One Family – One ID: Scheme Benefit Tracking System
-**Government of Gujarat (ગુજરાત સરકાર)**
+<p align="center">
+  <img src="https://img.shields.io/badge/Government%20of%20Gujarat-Official%20Platform-orange?style=for-the-badge" />
+  <img src="https://img.shields.io/badge/License-GOI--NIC-blue?style=for-the-badge" />
+  <img src="https://img.shields.io/badge/Tests-21%20Passed-brightgreen?style=for-the-badge" />
+  <img src="https://img.shields.io/badge/Python-3.14-blue?style=for-the-badge&logo=python" />
+  <img src="https://img.shields.io/badge/React-19-61DAFB?style=for-the-badge&logo=react" />
+</p>
 
-ParivarSetu is an integrated, state-wide e-governance platform designed for the **Government of Gujarat (ગુજરાત સરકાર)** to eliminate welfare benefit leakage, unify citizen eligibility across departments, and enforce transparent, auditable Direct Benefit Transfer (DBT) disbursals and grievance redressal under the **"One Family – One ID" (GJ-XXXXXXXX)** paradigm.
+# ParivarSetu (પરિવાર સેતુ)
+
+### One Family – One ID: Unified Scheme Benefit Tracking & Direct Benefit Transfer Platform
+
+**Government of Gujarat (ગુજરાત સરકાર) | General Administration Department**
 
 ---
 
-## 🏛️ System Actors & Demo Personas
+ParivarSetu is a full-stack e-governance platform built for the **Government of Gujarat** under the **"One Family – One ID (GJ-XXXXXXXX)"** paradigm. It eliminates welfare benefit leakage, automates cross-department eligibility matching, enforces bias-free adjudication, and provides transparent, auditable Direct Benefit Transfer (DBT) disbursals — all through a single, unified Family ID.
 
-All personas share the default password: `password123`
+> **Key Innovation:** ParivarSetu introduces **Blind Adjudication**, a **Generic Eligibility Engine** that auto-matches families to schemes across any department without manual paperwork, and **Executive Intelligence Analytics** for state administrators — features that go beyond traditional benefit management systems.
 
-| Persona | Role | Department / Jurisdiction | Email Credentials | Family ID |
+---
+
+## 📐 System Architecture
+
+```mermaid
+flowchart TD
+    subgraph FRONTEND["🖥️ React Frontend (Vite + Tailwind CSS)"]
+        LP["Landing Page<br/>Role-Based Login"]
+        CD["Citizen Dashboard"]
+        OP["Officer Portal<br/>(Blind Adjudication)"]
+        VP["Verifier Portal"]
+        AP["Admin Command Centre<br/>(Executive Analytics)"]
+    end
+
+    subgraph API["⚙️ FastAPI Backend"]
+        AUTH["Auth Service<br/>JWT + bcrypt + RBAC"]
+        FAM["Family Registry<br/>CRUD + PII Masking"]
+        SCH["Scheme Catalog<br/>+ Eligibility Engine"]
+        APP_R["Application Lifecycle<br/>5-Stage State Machine"]
+        COMP["Grievance & Escalation<br/>Auto-SLA Enforcement"]
+        ANLY["Analytics Engine<br/>Admin Intelligence"]
+        NOTIF["Notification Service"]
+        AUDIT["Audit Logger<br/>Tamper-Evident Ledger"]
+    end
+
+    subgraph ENGINE["🧠 Core Services"]
+        EE["Generic Eligibility Engine<br/>Auto Schema Matching"]
+        WF["Workflow Engine<br/>Flag Delayed Apps"]
+        BA["Blind Adjudication<br/>PII De-Identification"]
+    end
+
+    subgraph DB["🗄️ PostgreSQL Database"]
+        USERS["Users + Roles"]
+        FAMILIES["Families + Members"]
+        SCHEMES["Schemes + Departments"]
+        APPS["Applications"]
+        COMPLAINTS["Complaints"]
+        AUDIT_T["Audit Logs (Immutable)"]
+        BANKS["Bank Info (Masked)"]
+    end
+
+    LP --> AUTH
+    CD --> FAM & SCH & APP_R & COMP & NOTIF
+    OP --> SCH & APP_R & ANLY & BA
+    VP --> FAM
+    AP --> ANLY
+
+    AUTH --> USERS
+    FAM --> FAMILIES & BANKS
+    SCH --> SCHEMES & EE
+    APP_R --> APPS & AUDIT & WF
+    COMP --> COMPLAINTS
+    ANLY --> APPS & FAMILIES & SCHEMES
+    EE --> FAMILIES & SCHEMES
+    BA --> FAM
+
+    style FRONTEND fill:#FFF7ED,stroke:#EA580C,stroke-width:2px
+    style API fill:#F8FAFC,stroke:#475569,stroke-width:2px
+    style ENGINE fill:#FFFBEB,stroke:#D97706,stroke-width:2px
+    style DB fill:#F1F5F9,stroke:#334155,stroke-width:2px
+```
+
+### Data Flow: Citizen Application Lifecycle
+
+```mermaid
+sequenceDiagram
+    participant C as 👤 Citizen
+    participant FE as 🖥️ Frontend
+    participant API as ⚙️ FastAPI
+    participant EE as 🧠 Eligibility Engine
+    participant DB as 🗄️ PostgreSQL
+    participant O as 👨‍💼 Officer (Blind Mode)
+
+    C->>FE: Login with Family ID
+    FE->>API: POST /auth/login (JWT issued)
+    API->>EE: Evaluate all schemes for family
+    EE->>DB: Query schemes + family data
+    EE-->>API: Matched schemes list
+    API-->>FE: Eligible schemes with reasons
+    C->>FE: Apply for scheme (1-click)
+    FE->>API: POST /applications
+    API->>DB: Create application (status: Applied)
+    API->>DB: Write to audit_logs
+
+    O->>FE: Open Officer Portal
+    FE->>API: GET /applications (dept-scoped)
+    API->>DB: Fetch apps (dept_id from JWT)
+    API-->>FE: De-identified application data
+    Note over FE: Names hidden → "Applicant Household (GJ12345678)"
+    O->>FE: Review → Approve → Disburse
+    FE->>API: PUT /applications/{id}/disburse
+    API->>DB: Status → Disbursed + DBT Reference
+    API->>DB: Immutable audit_log entry
+```
+
+---
+
+## 🔐 Security Architecture
+
+ParivarSetu implements **defense-in-depth** security aligned with Government of India cybersecurity guidelines:
+
+| Layer | Mechanism | Description |
+|---|---|---|
+| **Authentication** | JWT + bcrypt | Passwords hashed with bcrypt (cost factor 12). Stateless JWT tokens carry `role`, `dept_id`, `family_id` claims |
+| **Authorization (RBAC)** | Role-Based Access Control | 4 distinct roles: `citizen`, `officer`, `verifier`, `admin`. Each role has dedicated FastAPI dependency guards (`require_citizen`, `require_officer`, `require_verifier`, `require_roles`) |
+| **Department Isolation** | JWT Claim Enforcement | Officers can ONLY access data from their assigned department. `dept_id` is extracted server-side from the JWT token — never from client input. Cross-department access returns `403 Forbidden` |
+| **Anti-IDOR Protection** | Server-Side Ownership Checks | Citizens cannot view/modify another family's data, applications, or complaints. Family ID is validated against the JWT `family_id` claim |
+| **PII Masking** | `mask_identifier()` Utility | Aadhaar numbers: `XXXX-XXXX-1234`. Bank accounts: `****4321`. Never exposed in full to any user |
+| **Blind Adjudication** | De-Identification Layer | Officers see `Applicant Household (GJ12345678)` instead of real names. Eliminates caste, religion, and name-based bias. DPDP Act 2023 compliant |
+| **OWASP Headers** | HTTP Middleware | `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, `X-XSS-Protection: 1; mode=block`, `Referrer-Policy: strict-origin-when-cross-origin` |
+| **Audit Trail** | Immutable `audit_logs` Table | Every state transition (approve, reject, disburse, verify) is logged with `user_id`, `action`, `entity`, `entity_id`, `timestamp`. Cannot be deleted or modified |
+
+---
+
+## 🛡️ Blind Adjudication: Anti-Bias De-Identification
+
+> **Innovation:** ParivarSetu is one of the first welfare platforms to implement **Blind Review** for government officers, ensuring zero-bias adjudication of applications.
+
+### How It Works
+
+When an officer opens an application for review, the backend **automatically strips all personally identifiable information (PII)**:
+
+| Real Data | What Officer Sees |
+|---|---|
+| `Smt. Priya Sharma` | `Applicant Household (GJ12345678)` |
+| Family members by name | `Member #1 (Head)`, `Member #2 (Spouse)` |
+| Bank account holder name | `Beneficiary #GJ12345678` |
+| Aadhaar number | `XXXX-XXXX-1234` (always masked) |
+
+Officers can only see **qualification facts**: income level, social category, district, health conditions, education records — never the applicant's identity. This prevents:
+- ❌ **Caste-based discrimination** in benefit approval
+- ❌ **Religious bias** in fund disbursement
+- ❌ **Favouritism** based on personal connections
+- ✅ **Merit-only decisions** based on statutory eligibility criteria
+
+The de-identification is enforced **server-side** — the frontend never receives real names for officer sessions.
+
+---
+
+## 🧠 Generic Eligibility Engine (Auto Schema Matching)
+
+> **Innovation:** Unlike hardcoded eligibility checks, ParivarSetu's engine **dynamically reads scheme rule columns** from the database and builds queries at runtime.
+
+### Architecture
+
+The engine evaluates families against schemes using **6 rule dimensions**:
+
+```
+┌──────────────────────────────────────────────────────────────┐
+│                  SCHEME RULES TABLE                          │
+├──────────────┬──────────────┬──────────────┬────────────────┤
+│ min_income   │ max_income   │ category     │ condition_tag  │
+│ required_class│ min_percentage│ business_cat │ min_biz_age   │
+└──────────────┴──────────────┴──────────────┴────────────────┘
+         │                │              │              │
+         ▼                ▼              ▼              ▼
+┌──────────────────────────────────────────────────────────────┐
+│              FAMILY DATA (Dynamic Matching)                  │
+├──────────────┬──────────────┬──────────────┬────────────────┤
+│ Family.income│ Family.category│ HealthInfo  │ EducationInfo  │
+│ BankInfo     │ BusinessInfo │ health_tags[]│ FamilyMembers  │
+└──────────────┴──────────────┴──────────────┴────────────────┘
+```
+
+**Key Benefits:**
+- 🆕 **Add new schemes** by inserting a database row — zero code changes required
+- 🏥 Works across **any department**: Health, Education, MSME, Social Justice, Agriculture
+- 🔄 **Bidirectional matching**: Find eligible families for a scheme OR eligible schemes for a family
+- 📊 Uses PostgreSQL **GIN array indexing** on health tags for O(1) condition matching
+
+### Supported Rule Types
+
+| Rule Column | Family Column Matched | Example |
+|---|---|---|
+| `max_income` | `Family.income` | ≤ ₹2,50,000 for BPL schemes |
+| `category` | `Family.category` | `SC`, `ST`, `OBC`, `General` |
+| `required_condition_tag` | `Family.health_tags[]` | `cardiac`, `diabetes`, `disability` |
+| `required_class` | `EducationInfo.current_class` | `12th`, `Graduate` |
+| `min_percentage` | `EducationInfo.last_percentage` | ≥ 60% for merit scholarships |
+| `business_category` | `BusinessInfo.business_type` | `Manufacturing`, `Retail` |
+| `min_business_age` | `BusinessInfo.business_age_months` | ≥ 12 months for MSME loans |
+
+---
+
+## 🏛️ Role-Based Access & Capabilities
+
+### 1. 👤 Citizen (`citizen`)
+| Capability | Description |
+|---|---|
+| View Family Profile | Complete family composition, income, health info, bank details |
+| Entitlement Discovery | Auto-matched eligible schemes via Eligibility Engine |
+| 1-Click Application | Apply to any eligible scheme instantly |
+| Application Tracker | 5-stage visual pipeline: `Applied → Under Review → Approved → Disbursed → Completed` |
+| Grievance Filing | Lodge complaints with auto-escalation to officer inbox |
+| Notifications | Real-time alerts for status changes, eligibility matches |
+
+### 2. 👨‍💼 Department Officer (`officer`)
+| Capability | Description |
+|---|---|
+| Department-Scoped Dashboard | Sees ONLY applications and schemes for their assigned department |
+| Blind Application Review | Applicant names hidden — decisions based purely on qualification facts |
+| Application State Machine | Review → Approve/Reject → Disburse with mandatory remarks |
+| DBT Disbursal | Execute fund transfers with auto-generated `DBT-GJ-XXXXX` reference |
+| View Eligible Families | See de-identified families matching scheme criteria |
+| Grievance Resolution | Respond to citizen complaints with resolution remarks |
+| Department Analytics | Application funnel, status distribution, scheme-wise charts |
+
+### 3. 🔍 Field Verifier (`verifier`)
+| Capability | Description |
+|---|---|
+| Provisional Queue | Review families registered at field camps awaiting verification |
+| Family Verification | Approve/reject family registrations after field inspection |
+| Enrolled Families List | Browse all verified and enrolled families |
+| Dual View | Toggle between "Pending Verification" and "Enrolled Families" tabs |
+
+### 4. 🏢 State Administrator (`admin`)
+| Capability | Description |
+|---|---|
+| Executive Overview | Total families, total disbursals, pending applications, SLA breaches |
+| Department-Wise Analysis | Per-department breakdown: applications, amounts, approval rates |
+| Proactive Gap Analysis | Families eligible but NOT yet applied — saturation gap identification |
+| District Saturation Map | District-level registered families vs applications filed |
+| Delayed Bottlenecks | Applications stuck > 3 days without action |
+| Read-Only Intelligence | Admin cannot approve/reject — purely analytical oversight role |
+
+---
+
+## 📊 Executive Intelligence Command Centre (Admin Analytics)
+
+The State Administrator portal provides **5 analytical dashboards**:
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    EXECUTIVE OVERVIEW                            │
+│  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐          │
+│  │ Families │ │Total DBT │ │ Pending  │ │Saturation│          │
+│  │ Enrolled │ │ Disbursed│ │ Backlog  │ │   Gap    │          │
+│  └──────────┘ └──────────┘ └──────────┘ └──────────┘          │
+├─────────────────────────────────────────────────────────────────┤
+│  📊 Department Disbursals  │  📋 Pending Applications          │
+│  Per-dept amount & count   │  Per-dept caseload breakdown      │
+├─────────────────────────────────────────────────────────────────┤
+│  🎯 Proactive Gap Analysis │  📍 District Saturation           │
+│  Eligible vs Applied       │  Families vs Applications by      │
+│  per scheme (% coverage)   │  district across Gujarat          │
+├─────────────────────────────────────────────────────────────────┤
+│  ⚠️ Delayed Bottlenecks                                        │
+│  Applications pending > 3 days without officer action           │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### Analytics API Endpoint
+
+```
+GET /api/v1/analytics/admin-dashboard
+Authorization: Bearer <admin-jwt-token>
+```
+
+Returns:
+- `executive_summary` — aggregate KPIs
+- `department_wise_analysis` — per-department breakdown
+- `proactive_gap_analysis` — eligible vs applied per scheme
+- `district_saturation` — district-level statistics
+- `delayed_bottlenecks` — SLA-breaching applications
+
+---
+
+## 🔍 Transparency & Accountability
+
+| Feature | Implementation |
+|---|---|
+| **5-Stage Application Pipeline** | Visual tracker: `Applied → Under Review → Approved → Disbursed → Completed` — citizen can see exactly where their application stands |
+| **DBT Traceability** | Every disbursal generates an immutable `DBT-GJ-XXXXX` reference logged in the `audit_logs` table |
+| **Immutable Audit Trail** | All officer actions (approve, reject, disburse, verify) logged with `user_id`, `timestamp`, `entity`, `entity_id` — cannot be modified or deleted |
+| **Grievance Redressal** | Citizens can file complaints at any stage. Auto-escalation flags delayed cases in the officer's priority inbox |
+| **SLA Enforcement** | Applications pending > 3 days are automatically flagged as delayed bottlenecks visible to admin |
+| **Department Isolation** | Officers are cryptographically bound to their department via JWT claims — no lateral access possible |
+| **Open API Documentation** | Full Swagger/OpenAPI docs at `/docs` — complete transparency of all available endpoints |
+
+---
+
+## 🏛️ System Actors & Demo Credentials
+
+All demo personas use the password: `Gujarat@2026`
+
+| Persona | Role | Department / Jurisdiction | Email | Family ID |
 |---|---|---|---|---|
 | **Smt. Priya Sharma** | Citizen | Gandhinagar (BPL, Income: ₹1,20,000) | `priya.sharma@parivar.gujarat.gov.in` | `GJ12345678` |
-| **Dr. Rajesh Mehta** | Department Officer | Health & Family Welfare Department | `health.officer@gujarat.gov.in` | N/A (Dept ID: 1) |
-| **Shri Kirit Trivedi** | Department Officer | Education Department | `education.officer@gujarat.gov.in` | N/A (Dept ID: 2) |
-| **Smt. Hina Patel** | Department Officer | Industries & MSME Department | `msme.officer@gujarat.gov.in` | N/A (Dept ID: 3) |
-| **Shri Ramesh Joshi** | Field Verifier | Talati-cum-Mantri, Gandhinagar | `talati.gandhinagar@gujarat.gov.in` | N/A |
-| **State Administrator** | State Admin | General Administration Dept | `admin@gujarat.gov.in` | N/A |
+| **Dr. Rajesh Mehta** | Dept. Officer | Health & Family Welfare | `health.officer@gujarat.gov.in` | — |
+| **Shri Kirit Trivedi** | Dept. Officer | Education Department | `education.officer@gujarat.gov.in` | — |
+| **Smt. Hina Patel** | Dept. Officer | Industries & MSME | `msme.officer@gujarat.gov.in` | — |
+| **Shri Ramesh Joshi** | Field Verifier | Talati-cum-Mantri, Gandhinagar | `talati.gandhinagar@gujarat.gov.in` | — |
+| **Shri Rajesh Kumar, IAS** | State Admin | General Administration Dept | `admin@gujarat.gov.in` | — |
 
 ---
 
 ## 🚀 Quick Start Guide
 
 ### Prerequisites
-- **Python 3.10+** (Tested on Python 3.14)
+- **Python 3.10+** (tested on Python 3.14)
 - **Node.js 18+** & npm
-- **PostgreSQL 14+** (Default db: `parivarsetu` on port `5432`)
+- **PostgreSQL 14+** (default database: `parivarsetu` on port `5432`)
 
-### 1. Database Initialization
+### 1. Database Setup
 ```bash
-# In PostgreSQL, ensure database 'parivarsetu' exists:
+# Create database in PostgreSQL
 CREATE DATABASE parivarsetu;
 
-# Seed initial Gujarat dataset (29+ families, 18 schemes, users, audit logs):
+# Seed Gujarat dataset (74 families, 12+ schemes, 6 users, departments, audit logs)
 cd backend
+pip install -r requirements.txt
 python scripts/init_db.py
 ```
 
@@ -43,102 +337,179 @@ python scripts/init_db.py
 # Option A: Windows launcher
 start-backend.bat
 
-# Option B: Manual CLI
+# Option B: Manual
 cd backend
 python -m uvicorn app.main:app --reload --port 8000
 ```
-Backend API will be live at: `http://localhost:8000` (Swagger docs: `http://localhost:8000/docs`)
+- API: `http://localhost:8000`
+- Swagger Docs: `http://localhost:8000/docs`
+- Health Check: `http://localhost:8000/health`
 
 ### 3. Start Frontend Portal
 ```bash
 # Option A: Windows launcher
 start-frontend.bat
 
-# Option B: Manual CLI
+# Option B: Manual
 cd frontend
 npm install
 npm run dev
 ```
-Open portal at: `http://localhost:5173`
+- Portal: `http://localhost:5173`
 
 ---
 
-## 🎯 7-Step Live Demonstration Script & Pitch
+## 🎯 Live Demonstration Script (7 Steps)
 
-Follow this exact walkthrough during evaluations or pitch presentations:
+### Step 1: Citizen Entitlement Discovery
+1. Select **"Citizen: Smt. Priya Sharma"** from the persona switcher.
+2. View Family ID `GJ12345678`, BPL status, income ₹1,20,000, verified members, masked bank account.
+3. The **Eligibility Engine** has already pre-matched schemes like **Mukhyamantri Amrutam (MA Yojana)** — zero paperwork.
 
-### Step 1: Citizen View & Entitlement Discovery (Priya Sharma)
-1. In the top bar persona switcher, select **"Citizen: Smt. Priya Sharma"**.
-2. Notice the official Gujarat Government sharp-edge portal layout (`rounded-none`), digital **Parivar ID (`GJ12345678`)**, BPL status, income badge (₹1,20,000), verified family members, and masked SBI bank account.
-3. Open **"Notifications"** — the dynamic Eligibility Engine has already pre-calculated her family's eligibility for Gujarat schemes like **Mukhyamantri Amrutam (MA Yojana)** and **Mukhyamantri Yuva Swavalamban (MYSY)** without manual paperwork.
+### Step 2: 1-Click Scheme Application
+1. Open **"Schemes Catalog"** → find an eligible scheme (green badge).
+2. Click **"Apply Now"** → Application created instantly in `Applied` state.
 
-### Step 2: Instant 1-Click Scheme Application
-1. Click on **"Schemes Catalog"** in the sidebar.
-2. Filter or search for **"Mukhyamantri Amrutam (MA Yojana)"**. Notice the green **"Eligible"** badge.
-3. Click **"Apply Now"** -> Application is instantly created in the `Applied` state, bound to the family's verified record.
+### Step 3: Department Isolation Demo
+1. Switch to **"Health Officer: Dr. Rajesh Mehta"**.
+2. Dashboard shows ONLY Health & Family Welfare schemes. Education/MSME data is **completely invisible**.
+3. **Blind Adjudication banner** confirms anti-bias mode is active.
 
-### Step 3: Server-Side Department Isolation (Dr. Rajesh Mehta)
-1. In the top header switcher, switch role to **"Health Officer: Dr. Rajesh Mehta"**.
-2. **Key Security Pitch:** Notice the officer dashboard automatically restricts visibility strictly to **Health & Family Welfare** schemes. Education and MSME data are completely invisible.
-3. Click **"View Eligible Families"** drawer — shows real-time algorithmic matching of Gujarat families qualifying for health aid.
+### Step 4: Blind Application Review
+1. In **Applications Review**, notice names are replaced: `Applicant Household (GJ12345678)`.
+2. Click **"Inspect Facts"** → see de-identified qualification dossier (income, category, health — no names).
+3. **Review → Approve** with remark.
 
-### Step 4: Application Review & State Machine Lifecycle
-1. In the **Applications Review** desk, find Priya Sharma's new application.
-2. Click **"Review Application"** -> The status transitions to `Under Review`.
-3. Click **"Approve"** with remark *"Verified BPL card & eligibility criteria"* -> The status transitions to `Approved`.
-
-### Step 5: Direct Benefit Transfer (DBT) Disbursal
-1. Click **"Disburse Funds"** modal on Priya's approved record.
-2. Enter benefit disbursal amount: `₹50,000`.
-3. Click **"Execute Disbursal"** -> State transitions to `Disbursed`.
-4. An immutable **DBT Transaction Reference (`DBT-GJ-XXXXX`)** is generated in real-time, and written to the tamper-evident PostgreSQL `audit_logs` ledger.
+### Step 5: DBT Fund Disbursal
+1. Click **"Disburse Funds"** on the approved application.
+2. Enter amount: `₹50,000` → Execute.
+3. An immutable **DBT Transaction Reference (`DBT-GJ-XXXXX`)** is generated and logged.
 
 ### Step 6: Citizen Grievance & Auto-Escalation
-1. Switch persona back to **Citizen: Smt. Priya Sharma**.
-2. Navigate to **"Application Tracker"** -> view the visual 5-stage progress pipeline.
-3. Click **"File Grievance"** -> Submit complaint *"Disbursal SMS not received yet"*.
-4. **Pitch Highlight:** The application automatically gets flagged and escalated to `Escalated` status in the officer's priority inbox.
-5. Switch to **Health Officer** -> view Grievance Inbox -> Submit resolution remark *"Bank transfer re-verified, SMS sent"* -> Status seamlessly returns to `Approved`.
+1. Switch back to **Citizen: Priya Sharma**.
+2. Open **Application Tracker** → view 5-stage pipeline.
+3. File a grievance → Application auto-escalates to officer's priority inbox.
+4. Switch to **Officer** → resolve grievance → status returns to normal.
 
-### Step 7: Verifier Desk & Department Analytics
-1. Switch to **Verifier: Shri Ramesh Joshi (Talati)**.
-2. Open **"Verifier Desk"** to review field camp provisional registrations and verify them into permanent Family IDs.
-3. Switch to Officer / Admin and open **"Analytics Dashboard"**:
-   - Live Application Status Funnel (`Applied` → `Under Review` → `Approved` → `Disbursed`).
-   - Scheme Disbursals Distribution chart.
-   - District-wise Gujarat saturation breakdown across Ahmedabad, Surat, Rajkot, Vadodara, Gandhinagar, Bhavnagar, and Kutch.
-
----
-
-## 🔒 Security, Privacy & Compliance (Phase 5)
-
-- **Sensitive Data Masking:** Aadhaar numbers are strictly stored and serialized as `XXXX-XXXX-1234`. Bank account numbers are masked (`****1234`).
-- **Anti-IDOR Protection:** Citizens cannot modify another family's profile, bank info, applications, or complaints.
-- **Department Boundaries:** Department IDs are extracted strictly from server-side JWT claims. Cross-department actions trigger immediate `403 Forbidden`.
-- **Relational Deduplication:** PostgreSQL unique constraints and partial indexes prevent duplicate scheme applications and notifications.
-- **OWASP Headers:** Production middleware applies `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, `X-XSS-Protection: 1; mode=block`, and strict referrer policy.
+### Step 7: Admin Intelligence & Verifier Desk
+1. Switch to **Verifier: Shri Ramesh Joshi** → verify provisional family registrations.
+2. Switch to **Admin: Shri Rajesh Kumar, IAS** → view Executive Intelligence Command Centre:
+   - Department-wise disbursal breakdown
+   - Proactive gap analysis (eligible but not applied)
+   - District saturation map
+   - Delayed bottleneck alerts
 
 ---
 
 ## 🧪 Automated Test Suite
-
-Run the full suite of 21 tests covering all phases:
 
 ```bash
 cd backend
 python -m pytest tests/ -v
 ```
 
-Test coverage includes:
-- `tests/test_phase1.py` - Auth, JWT claims, role-based isolation, mock PDS registry.
-- `tests/test_phase2.py` - Scheme CRUD, generic eligibility engine, state machine transitions, DBT disbursals.
-- `tests/test_phase3.py` - Grievance lifecycle, auto-escalation, delayed applications detection, analytics endpoints.
-- `tests/test_phase5.py` - Security headers, Aadhaar/Bank masking, anti-IDOR checks, verifier permissions.
+**21 tests** across 4 test modules:
+
+| Module | Coverage |
+|---|---|
+| `test_phase1.py` | Auth, JWT claims, role-based isolation, mock PDS registry |
+| `test_phase2.py` | Scheme CRUD, eligibility engine, state machine transitions, DBT disbursals |
+| `test_phase3.py` | Grievance lifecycle, auto-escalation, delayed applications, analytics |
+| `test_phase5.py` | OWASP security headers, Aadhaar/Bank masking, anti-IDOR checks, verifier permissions |
 
 ---
 
 ## 💻 Tech Stack
-- **Frontend:** React 19, Vite 8, Tailwind CSS, Lucide Icons, Recharts
-- **Backend:** FastAPI, SQLAlchemy ORM, Pydantic v2 (ConfigDict), Python 3.14
-- **Database:** PostgreSQL 18 with GIN array indexing on tags
-- **Design System:** Government of Gujarat official sharp-edge design system (`rounded-none`, NIC portal standard)
+
+| Layer | Technology |
+|---|---|
+| **Frontend** | React 19, Vite 8, Tailwind CSS, Lucide Icons, Recharts |
+| **Backend** | FastAPI, SQLAlchemy ORM, Pydantic v2 (ConfigDict), Python 3.14 |
+| **Database** | PostgreSQL 18 with GIN array indexing on health tags |
+| **Authentication** | python-jose (JWT), bcrypt |
+| **Design System** | Government of Gujarat NIC portal standard (`rounded-none`, sharp-edge, orange/amber/slate palette) |
+
+---
+
+## 📁 Project Structure
+
+```
+ParivarSetu/
+├── backend/
+│   ├── app/
+│   │   ├── api/
+│   │   │   ├── routes/
+│   │   │   │   ├── auth.py           # Login, JWT issuance
+│   │   │   │   ├── families.py       # Family CRUD + Blind Review
+│   │   │   │   ├── schemes.py        # Scheme catalog + Eligibility
+│   │   │   │   ├── applications.py   # 5-stage state machine + DBT
+│   │   │   │   ├── complaints.py     # Grievance + Auto-escalation
+│   │   │   │   ├── analytics.py      # Officer + Admin dashboards
+│   │   │   │   └── notifications.py  # Real-time alerts
+│   │   │   └── api_router.py
+│   │   ├── core/
+│   │   │   ├── config.py             # Environment settings
+│   │   │   ├── database.py           # SQLAlchemy engine + session
+│   │   │   └── security.py           # JWT, bcrypt, RBAC, PII masking
+│   │   ├── models/
+│   │   │   ├── user.py               # User + Role model
+│   │   │   ├── family.py             # Family, Members, Health, Education, Business, Bank
+│   │   │   ├── scheme.py             # Scheme + Department models
+│   │   │   ├── application.py        # Application state machine
+│   │   │   ├── complaint.py          # Grievance model
+│   │   │   ├── notification.py       # Notification model
+│   │   │   └── audit.py              # Immutable audit log
+│   │   └── services/
+│   │       ├── eligibility.py        # Generic Eligibility Engine
+│   │       └── workflow.py           # Delayed application flagging
+│   ├── scripts/
+│   │   └── init_db.py                # Seed 74 families, 12 schemes, 6 users
+│   └── tests/
+│       ├── test_phase1.py
+│       ├── test_phase2.py
+│       ├── test_phase3.py
+│       └── test_phase5.py
+├── frontend/
+│   └── src/
+│       ├── App.jsx                   # Main app + role routing
+│       ├── components/
+│       │   └── layout/
+│       │       ├── Header.jsx        # Persona switcher + logout
+│       │       └── Sidebar.jsx       # Role-based navigation
+│       ├── pages/
+│       │   ├── LandingPage.jsx       # Role-based login portal
+│       │   ├── CitizenDashboard.jsx  # Family profile + schemes + tracker
+│       │   ├── OfficerPortal.jsx     # Blind review + DBT + analytics
+│       │   ├── VerifierPortal.jsx    # Field verification desk
+│       │   └── AdminPortal.jsx       # Executive Intelligence Centre
+│       └── services/
+│           └── api.js                # Axios API client
+├── start-backend.bat
+├── start-frontend.bat
+└── README.md
+```
+
+---
+
+## 🔑 Key Differentiators
+
+| Feature | Traditional Systems | ParivarSetu |
+|---|---|---|
+| Eligibility Check | Manual paperwork per scheme | **Auto Schema Matching** — engine reads rules from DB, zero code changes |
+| Officer Bias | Officer sees full applicant identity | **Blind Adjudication** — names hidden, merit-only decisions |
+| Cross-Department Access | Shared dashboards | **Cryptographic Dept Isolation** — JWT-enforced boundaries |
+| Admin Oversight | Manual reports | **Real-time Executive Intelligence** with gap analysis |
+| Benefit Tracking | Opaque status | **5-Stage Visual Pipeline** — citizen sees every transition |
+| Accountability | Minimal logging | **Immutable Audit Ledger** — every action recorded with DBT reference |
+| New Scheme Addition | Code changes + deployment | **Database row insert** — engine auto-discovers new schemes |
+| Privacy | PII exposed to all roles | **PII Masking + Blind Review** — DPDP Act 2023 compliant |
+
+---
+
+<p align="center">
+  <strong>🏛️ ParivarSetu — One Family, One ID, One Platform</strong><br/>
+  <em>Government of Gujarat | General Administration Department</em><br/><br/>
+  <img src="https://img.shields.io/badge/Built%20With-FastAPI%20%2B%20React-orange?style=flat-square" />
+  <img src="https://img.shields.io/badge/Database-PostgreSQL-blue?style=flat-square" />
+  <img src="https://img.shields.io/badge/Security-DPDP%20Compliant-green?style=flat-square" />
+</p>
