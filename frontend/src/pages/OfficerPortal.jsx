@@ -19,13 +19,31 @@ import AnalyticsDashboard from '../components/officer/AnalyticsDashboard';
 
 export default function OfficerPortal({ 
   token = null, 
-  user = { name: "Dr. Mehta", dept_id: 6, department_name: "Health & Family Welfare" } 
+  user = { name: "Dr. Mehta", dept_id: 6, department_name: "Health & Family Welfare" },
+  activeTab: externalTab = "officer-apps",
+  onTabChange = () => {}
 }) {
-  const [activeTab, setActiveTab] = useState("applications");
+  const getInternalTab = (tab) => {
+    if (tab === "officer-complaints" || tab === "complaints") return "complaints";
+    if (tab === "officer-schemes" || tab === "schemes") return "schemes";
+    if (tab === "officer-analytics" || tab === "analytics") return "analytics";
+    return "applications";
+  };
+
+  const [activeTab, setActiveTab] = useState(() => getInternalTab(externalTab));
   const [schemes, setSchemes] = useState([]);
   const [applications, setApplications] = useState([]);
   const [complaints, setComplaints] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    setActiveTab(getInternalTab(externalTab));
+  }, [externalTab]);
+
+  const handleTabChange = (targetTab) => {
+    setActiveTab(targetTab);
+    onTabChange(`officer-${targetTab}`);
+  };
 
   // Modals state
   const [showCreateSchemeModal, setShowCreateSchemeModal] = useState(false);
@@ -75,7 +93,7 @@ export default function OfficerPortal({
 
   useEffect(() => {
     loadData();
-  }, [token]);
+  }, [token, user?.dept_id]);
 
   // Handlers
   const handleCreateScheme = async (e) => {
@@ -184,7 +202,7 @@ export default function OfficerPortal({
         {/* Tab switcher */}
         <div className="flex flex-wrap gap-1 border border-slate-200 p-1 bg-slate-50">
           <button
-            onClick={() => setActiveTab("applications")}
+            onClick={() => handleTabChange("applications")}
             className={`px-3 py-1.5 text-xs font-bold rounded-none cursor-pointer ${
               activeTab === "applications" ? 'bg-orange-700 text-white shadow-xs' : 'text-slate-700 hover:bg-slate-200'
             }`}
@@ -192,7 +210,7 @@ export default function OfficerPortal({
             Applications ({applications.length})
           </button>
           <button
-            onClick={() => setActiveTab("schemes")}
+            onClick={() => handleTabChange("schemes")}
             className={`px-3 py-1.5 text-xs font-bold rounded-none cursor-pointer ${
               activeTab === "schemes" ? 'bg-orange-700 text-white shadow-xs' : 'text-slate-700 hover:bg-slate-200'
             }`}
@@ -200,7 +218,7 @@ export default function OfficerPortal({
             My Schemes ({schemes.length})
           </button>
           <button
-            onClick={() => setActiveTab("complaints")}
+            onClick={() => handleTabChange("complaints")}
             className={`px-3 py-1.5 text-xs font-bold rounded-none cursor-pointer flex items-center gap-1 ${
               activeTab === "complaints" ? 'bg-orange-700 text-white shadow-xs' : 'text-slate-700 hover:bg-slate-200'
             }`}
@@ -211,7 +229,7 @@ export default function OfficerPortal({
             )}
           </button>
           <button
-            onClick={() => setActiveTab("analytics")}
+            onClick={() => handleTabChange("analytics")}
             className={`px-3 py-1.5 text-xs font-bold rounded-none cursor-pointer ${
               activeTab === "analytics" ? 'bg-orange-700 text-white shadow-xs' : 'text-slate-700 hover:bg-slate-200'
             }`}

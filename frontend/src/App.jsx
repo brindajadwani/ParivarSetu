@@ -186,6 +186,8 @@ export default function App() {
             <OfficerPortal 
               token={token} 
               user={currentProfile} 
+              activeTab={activeTab}
+              onTabChange={setActiveTab}
             />
           )}
 

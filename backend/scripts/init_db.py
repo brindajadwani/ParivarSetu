@@ -441,6 +441,37 @@ def init_seed_data():
                     ))
                     db.commit()
 
+        # Seed grievance complaints for each department
+        print("4b. Seeding department-isolated grievance complaints...")
+        mysy_app = db.query(Application).filter(Application.family_id == demo_id, Application.scheme_id == mysy.id).first() if mysy else None
+        startup_app = db.query(Application).filter(Application.family_id == demo_id, Application.scheme_id == startup_scheme.id).first() if startup_scheme else None
+        health_app = db.query(Application).filter(Application.family_id == demo_id, Application.scheme_id == ayushman.id).first() if ayushman else None
+
+        if mysy_app and not db.query(Complaint).filter(Complaint.application_id == mysy_app.id).first():
+            db.add(Complaint(
+                application_id=mysy_app.id,
+                message="12th marksheet and engineering college fee receipt submitted. Awaiting scholarship verification.",
+                status="Open"
+            ))
+            mysy_app.status = "Escalated"
+
+        if startup_app and not db.query(Complaint).filter(Complaint.application_id == startup_app.id).first():
+            db.add(Complaint(
+                application_id=startup_app.id,
+                message="Startup prototype and DPIIT registration uploaded. Inquiring regarding technical committee evaluation date.",
+                status="Open"
+            ))
+            startup_app.status = "Escalated"
+
+        if health_app and not db.query(Complaint).filter(Complaint.application_id == health_app.id).first():
+            db.add(Complaint(
+                application_id=health_app.id,
+                message="Civil Hospital Gandhinagar desk requested official Parivar verification letter for cashless surgery approval.",
+                status="Open"
+            ))
+            health_app.status = "Escalated"
+        db.commit()
+
         print("5. Seeding default role-based user accounts...")
         default_users = [
             {"email": "priya.sharma@parivar.gujarat.gov.in", "password": "password123", "role": "citizen", "family_id": demo_id},
