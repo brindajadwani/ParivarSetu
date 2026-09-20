@@ -1,6 +1,7 @@
 import os
 import sys
 from datetime import datetime, timedelta, timezone
+import random
 
 # Add parent directory to sys.path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
@@ -18,7 +19,7 @@ from app.services.family import sync_family_tags
 def init_seed_data():
     db = SessionLocal()
     try:
-        print("Checking departments for Gujarat...")
+        print("1. Checking & seeding departments for Gujarat...")
         dept_names = [
             "Health & Family Welfare",
             "Education Department",
@@ -36,7 +37,7 @@ def init_seed_data():
                 db.refresh(d)
             depts[name] = d
 
-        print("Seeding foundational Government of Gujarat schemes...")
+        print("2. Seeding foundational Government of Gujarat schemes...")
         schemes_data = [
             {
                 "name": "MA Amrutam / PMJAY Health Scheme",
@@ -86,6 +87,24 @@ def init_seed_data():
                 "required_class": "10th",
                 "benefit_amount": 10000.0,
                 "active": True
+            },
+            {
+                "name": "Gujarat Matrushakti Nutritional Support",
+                "dept": "Health & Family Welfare",
+                "description": "Nutritional grant and rations for pregnant women and lactating mothers for 1000 days.",
+                "max_income": 250000,
+                "required_condition_tag": "pregnant",
+                "benefit_amount": 12000.0,
+                "active": True
+            },
+            {
+                "name": "Dr. Ambedkar Awas Yojana",
+                "dept": "Social Justice & Empowerment",
+                "description": "Financial assistance for house construction for economically weaker SC/ST families in Gujarat.",
+                "max_income": 180000,
+                "category": "SC",
+                "benefit_amount": 120000.0,
+                "active": True
             }
         ]
 
@@ -114,132 +133,322 @@ def init_seed_data():
             else:
                 created_schemes[s["name"]] = existing
 
-        print("Seeding demo citizen family matching dashboard UI (Priya Sharma / Patel: GJ12345678)...")
-        demo_family_id = "GJ12345678"
-        family = db.query(Family).filter(Family.family_id == demo_family_id).first()
-        if not family:
-            family = Family(
-                family_id=demo_family_id,
-                head_name="Priya Sharma",
-                income=180000,
-                category="OBC",
-                district="Gandhinagar",
-                ration_card_no="RC-GJ-0982341",
-                aadhaar_ref_masked="XXXX-XXXX-4589",
-                status="permanent",
-                health_tags=["diabetes_care"],
-                education_tags=["class:10th", "status:enrolled"],
-                business_tags=["startup", "registered"]
-            )
-            db.add(family)
-            db.commit()
-            db.refresh(family)
+        print("3. Seeding 28 diverse Gujarat families across districts...")
+        districts = [
+            "Gandhinagar", "Ahmedabad", "Surat", "Rajkot", "Vadodara",
+            "Bhavnagar", "Jamnagar", "Junagadh", "Dahod", "Banaskantha",
+            "Anand", "Mehsana", "Kutch", "Kheda", "Patan"
+        ]
 
-            # Members: 4 family members
-            members = [
-                FamilyMember(family_id=demo_family_id, name="Priya Sharma", age=36, gender="Female", relation="head", occupation="Handicraft Entrepreneur"),
-                FamilyMember(family_id=demo_family_id, name="Rajesh Sharma", age=39, gender="Male", relation="spouse", occupation="Agritech Technician"),
-                FamilyMember(family_id=demo_family_id, name="Aarav Sharma", age=15, gender="Male", relation="child", occupation="Student (Class 10)"),
-                FamilyMember(family_id=demo_family_id, name="Sunita Devi", age=64, gender="Female", relation="parent", occupation="Homemaker")
+        family_specs = [
+            # 1. Flagship demo family matching UI
+            {
+                "id": "GJ12345678",
+                "head": "Priya Sharma",
+                "district": "Gandhinagar",
+                "income": 180000.0,
+                "category": "OBC",
+                "status": "permanent",
+                "rc": "RC-GJ-0982341",
+                "aadhaar": "XXXX-XXXX-4589",
+                "members": [
+                    ("Priya Sharma", 36, "Female", "head", "Handicraft Artisan"),
+                    ("Rajesh Sharma", 39, "Male", "spouse", "Agritech Technician"),
+                    ("Aarav Sharma", 15, "Male", "child", "Student (Class 10)"),
+                    ("Sunita Devi", 64, "Female", "parent", "Homemaker")
+                ],
+                "edu": (2, "10th", 78.5),
+                "biz": ("Gujarat Heritage Handlooms", "startup", "registered", 14, 160000.0),
+                "health": ["diabetes_care"]
+            },
+            # 2. BPL family in Ahmedabad (PM Awas / Health eligible)
+            {
+                "id": "GJ20019281",
+                "head": "Ramesh Patel",
+                "district": "Ahmedabad",
+                "income": 110000.0,
+                "category": "BPL",
+                "status": "permanent",
+                "rc": "RC-GJ-1002931",
+                "aadhaar": "XXXX-XXXX-1920",
+                "members": [
+                    ("Ramesh Patel", 42, "Male", "head", "Construction Worker"),
+                    ("Geeta Patel", 38, "Female", "spouse", "Domestic Worker"),
+                    ("Kavita Patel", 16, "Female", "child", "Student (Class 10)")
+                ],
+                "edu": (2, "10th", 72.0),
+                "health": ["bpl_health_card"]
+            },
+            # 3. Pregnant Mother in Dahod (Health & Matrushakti eligible)
+            {
+                "id": "GJ31029384",
+                "head": "Kailashben Baria",
+                "district": "Dahod",
+                "income": 95000.0,
+                "category": "ST",
+                "status": "permanent",
+                "rc": "RC-GJ-3102948",
+                "aadhaar": "XXXX-XXXX-8821",
+                "members": [
+                    ("Kailashben Baria", 24, "Female", "head", "Agricultural Worker"),
+                    ("Sureshbhai Baria", 27, "Male", "spouse", "Farm Laborer")
+                ],
+                "health": ["pregnant"]
+            },
+            # 4. Bright High-Scorer in Rajkot (MYSY Eligible)
+            {
+                "id": "GJ41092837",
+                "head": "Jignesh Vaghela",
+                "district": "Rajkot",
+                "income": 220000.0,
+                "category": "SC",
+                "status": "permanent",
+                "rc": "RC-GJ-4109281",
+                "aadhaar": "XXXX-XXXX-3342",
+                "members": [
+                    ("Jignesh Vaghela", 48, "Male", "head", "Electrician"),
+                    ("Meenaben Vaghela", 44, "Female", "spouse", "Tailor"),
+                    ("Bhavik Vaghela", 16, "Male", "child", "Student (Class 10)")
+                ],
+                "edu": (2, "10th", 89.4),
+                "health": []
+            },
+            # 5. Innovative Tech Startup in Surat (Startup Assistance Eligible)
+            {
+                "id": "GJ52019283",
+                "head": "Meera Desai",
+                "district": "Surat",
+                "income": 450000.0,
+                "category": "General",
+                "status": "permanent",
+                "rc": "RC-GJ-5201948",
+                "aadhaar": "XXXX-XXXX-9901",
+                "members": [
+                    ("Meera Desai", 29, "Female", "head", "Software Founder"),
+                    ("Karan Desai", 31, "Male", "spouse", "Data Analyst")
+                ],
+                "biz": ("Surat Solar IoT Solutions", "startup", "registered", 18, 520000.0)
+            },
+            # 6. SC Housing & Welfare family in Vadodara
+            {
+                "id": "GJ63019284",
+                "head": "Mansukhbhai Solanki",
+                "district": "Vadodara",
+                "income": 140000.0,
+                "category": "SC",
+                "status": "permanent",
+                "rc": "RC-GJ-6301920",
+                "aadhaar": "XXXX-XXXX-7721",
+                "members": [
+                    ("Mansukhbhai Solanki", 52, "Male", "head", "Auto Driver"),
+                    ("Laxmiben Solanki", 48, "Female", "spouse", "Homemaker"),
+                    ("Pooja Solanki", 15, "Female", "child", "Student (Class 10)")
+                ],
+                "edu": (2, "10th", 65.0)
+            },
+            # 7. Provisional Family waiting for Verifier
+            {
+                "id": "GJ74019285",
+                "head": "Alpeshbhai Chauhan",
+                "district": "Bhavnagar",
+                "income": 175000.0,
+                "category": "SEBC",
+                "status": "provisional",
+                "rc": "RC-GJ-7401938",
+                "aadhaar": "XXXX-XXXX-6612",
+                "members": [
+                    ("Alpeshbhai Chauhan", 34, "Male", "head", "Carpenter"),
+                    ("Niruben Chauhan", 31, "Female", "spouse", "Homemaker")
+                ]
+            }
+        ]
+
+        # Generate remaining families up to 28
+        first_names_m = ["Bharat", "Nitin", "Pravin", "Deepak", "Chirag", "Hitesh", "Paresh", "Mukesh", "Vijay", "Ashok", "Sanjay"]
+        first_names_f = ["Anilaben", "Jyotiben", "Hansaben", "Urmilaben", "Bhavanaben", "Dharmishtha", "Neelam", "Varsha", "Rekha"]
+        surnames = ["Patel", "Shah", "Prajapati", "Parmar", "Gohil", "Chaudhary", "Makwana", "Joshi", "Rathod", "Thakor", "Zala"]
+        categories_pool = ["BPL", "SEBC", "SC", "ST", "General"]
+
+        current_count = len(family_specs)
+        for i in range(current_count, 28):
+            gender = "Male" if i % 2 == 0 else "Female"
+            fn = random.choice(first_names_m if gender == "Male" else first_names_f)
+            ln = random.choice(surnames)
+            cat = random.choice(categories_pool)
+            inc = 80000.0 if cat == "BPL" else random.choice([130000.0, 190000.0, 240000.0, 350000.0, 550000.0])
+            dist = districts[i % len(districts)]
+            f_id = f"GJ{random.randint(10000000, 99999999)}"
+
+            has_student = (i % 2 == 0)
+            has_biz = (i % 4 == 0)
+            has_health = (i % 3 == 0)
+
+            members_list = [
+                (f"{fn} {ln}", random.randint(30, 55), gender, "head", "Self-employed"),
+                (f"Spouse {ln}", random.randint(28, 52), "Female" if gender == "Male" else "Male", "spouse", "Homemaker")
             ]
-            for m in members:
-                db.add(m)
-            db.commit()
+            if has_student:
+                members_list.append((f"Child {ln}", 15, "Male", "child", "Student"))
 
-            # Education info
-            aarav = db.query(FamilyMember).filter(FamilyMember.family_id == demo_family_id, FamilyMember.name == "Aarav Sharma").first()
-            if aarav:
-                db.add(EducationInfo(
-                    family_id=demo_family_id,
-                    member_id=aarav.id,
-                    current_class="10th",
-                    school_or_college="Gandhinagar Government Higher Secondary School",
-                    last_percentage=78.5,
-                    enrollment_status="enrolled"
+            spec = {
+                "id": f_id,
+                "head": f"{fn} {ln}",
+                "district": dist,
+                "income": inc,
+                "category": cat,
+                "status": "permanent" if i % 6 != 0 else "provisional",
+                "rc": f"RC-GJ-{random.randint(1000000, 9999999)}",
+                "aadhaar": f"XXXX-XXXX-{random.randint(1000, 9999)}",
+                "members": members_list
+            }
+            if has_student:
+                spec["edu"] = (2, "10th", round(random.uniform(55.0, 92.0), 1))
+            if has_biz:
+                spec["biz"] = (f"{ln} Enterprises", random.choice(["startup", "MSME", "small_business"]), "registered", random.randint(7, 36), inc * 1.5)
+            if has_health:
+                spec["health"] = random.choice([["diabetes_care"], ["hypertension"], ["pregnant"], ["bpl_health_card"]])
+
+            family_specs.append(spec)
+
+        for spec in family_specs:
+            f = db.query(Family).filter(Family.family_id == spec["id"]).first()
+            if not f:
+                f = Family(
+                    family_id=spec["id"],
+                    head_name=spec["head"],
+                    income=spec["income"],
+                    category=spec["category"],
+                    district=spec["district"],
+                    ration_card_no=spec["rc"],
+                    aadhaar_ref_masked=spec["aadhaar"],
+                    status=spec["status"]
+                )
+                db.add(f)
+                db.commit()
+
+                # Add members
+                mem_objs = []
+                for m_name, m_age, m_gen, m_rel, m_occ in spec["members"]:
+                    mem = FamilyMember(
+                        family_id=spec["id"],
+                        name=m_name,
+                        age=m_age,
+                        gender=m_gen,
+                        relation=m_rel,
+                        occupation=m_occ
+                    )
+                    db.add(mem)
+                    db.commit()
+                    db.refresh(mem)
+                    mem_objs.append(mem)
+
+                # Add bank info
+                db.add(BankInfo(
+                    family_id=spec["id"],
+                    account_number_masked=f"****{random.randint(1000, 9999)}",
+                    ifsc="SBIN0001234",
+                    bank_name="State Bank of India",
+                    account_holder=spec["head"]
                 ))
 
-            # Business info
-            priya_mem = db.query(FamilyMember).filter(FamilyMember.family_id == demo_family_id, FamilyMember.name == "Priya Sharma").first()
-            if priya_mem:
-                db.add(BusinessInfo(
-                    family_id=demo_family_id,
-                    member_id=priya_mem.id,
-                    business_name="Gujarat Heritage Handlooms",
-                    business_type="startup",
-                    registration_status="registered",
-                    business_age_months=14,
-                    annual_turnover=160000.0
-                ))
+                # Add Education if spec
+                if "edu" in spec and len(mem_objs) > spec["edu"][0]:
+                    target_m = mem_objs[spec["edu"][0]]
+                    db.add(EducationInfo(
+                        family_id=spec["id"],
+                        member_id=target_m.id,
+                        current_class=spec["edu"][1],
+                        school_or_college=f"{spec['district']} Higher Secondary School",
+                        last_percentage=spec["edu"][2],
+                        enrollment_status="enrolled"
+                    ))
 
-            # Bank Info
-            db.add(BankInfo(
-                family_id=demo_family_id,
-                account_number_masked="****4321",
-                ifsc="SBIN0001234",
-                bank_name="State Bank of India (Gandhinagar)",
-                account_holder="Priya Sharma"
-            ))
-            db.commit()
+                # Add Business if spec
+                if "biz" in spec and len(mem_objs) > 0:
+                    b_name, b_type, b_reg, b_age, b_turnover = spec["biz"]
+                    db.add(BusinessInfo(
+                        family_id=spec["id"],
+                        member_id=mem_objs[0].id,
+                        business_name=b_name,
+                        business_type=b_type,
+                        registration_status=b_reg,
+                        business_age_months=b_age,
+                        annual_turnover=b_turnover
+                    ))
 
-            sync_family_tags(demo_family_id, db)
+                # Add Health if spec
+                if "health" in spec:
+                    db.add(HealthInfo(
+                        family_id=spec["id"],
+                        member_id=mem_objs[0].id,
+                        condition_tags=spec["health"],
+                        bpl_health_card=("bpl_health_card" in spec["health"])
+                    ))
 
-        # Seed Applications matching UI stats: 3 applications (2 in progress, 1 approved)
-        ma_health = created_schemes.get("MA Amrutam / PMJAY Health Scheme")
+                db.commit()
+                # Run tag sync to populate GIN array columns
+                sync_family_tags(spec["id"], db)
+
+        print("4. Seeding applications and notifications for demo family GJ12345678...")
+        now = datetime.now(timezone.utc).replace(tzinfo=None)
+        ayushman = created_schemes.get("MA Amrutam / PMJAY Health Scheme")
         mysy = created_schemes.get("MYSY (Mukhyamantri Yuva Swavalamban Yojana)")
         startup_scheme = created_schemes.get("Gujarat Startup & Innovation Assistance")
         awas_scheme = created_schemes.get("Mukhyamantri Awas Yojana (Urban & Rural)")
 
-        now = datetime.now(timezone.utc).replace(tzinfo=None)
-        if ma_health and not db.query(Application).filter(Application.family_id == demo_family_id, Application.scheme_id == ma_health.id).first():
+        demo_id = "GJ12345678"
+        if ayushman and not db.query(Application).filter(Application.family_id == demo_id, Application.scheme_id == ayushman.id).first():
             db.add(Application(
-                family_id=demo_family_id,
-                scheme_id=ma_health.id,
+                family_id=demo_id,
+                scheme_id=ayushman.id,
                 status="Approved",
                 applied_on=now - timedelta(days=38),
                 disbursed_amount=48000.0,
                 txn_id="DBT-GJ-98214"
             ))
 
-        if mysy and not db.query(Application).filter(Application.family_id == demo_family_id, Application.scheme_id == mysy.id).first():
+        if mysy and not db.query(Application).filter(Application.family_id == demo_id, Application.scheme_id == mysy.id).first():
             db.add(Application(
-                family_id=demo_family_id,
+                family_id=demo_id,
                 scheme_id=mysy.id,
                 status="Under Review",
                 applied_on=now - timedelta(days=22)
             ))
 
-        if startup_scheme and not db.query(Application).filter(Application.family_id == demo_family_id, Application.scheme_id == startup_scheme.id).first():
+        if startup_scheme and not db.query(Application).filter(Application.family_id == demo_id, Application.scheme_id == startup_scheme.id).first():
             db.add(Application(
-                family_id=demo_family_id,
+                family_id=demo_id,
                 scheme_id=startup_scheme.id,
                 status="Applied",
                 applied_on=now - timedelta(days=17)
             ))
 
-        # Seed Notifications
-        if ma_health and mysy and startup_scheme and awas_scheme:
-            notifications = [
-                (ma_health.id, "Your MA Amrutam / PMJAY Health application has been approved.", True),
+        # Seed notifications for demo
+        if ayushman and mysy and startup_scheme and awas_scheme:
+            notifs = [
+                (ayushman.id, "Your MA Amrutam health application has been approved.", True),
                 (startup_scheme.id, "New scheme available: Gujarat Startup & Innovation Assistance.", True),
                 (mysy.id, "Your application for MYSY Scholarship is under review.", False),
                 (awas_scheme.id, "Complaint #CP0001234 regarding Mukhyamantri Awas Yojana has been resolved.", False)
             ]
-            for s_id, msg, is_read in notifications:
-                if not db.query(Notification).filter(Notification.family_id == demo_family_id, Notification.scheme_id == s_id).first():
+            for s_id, msg, is_read in notifs:
+                if not db.query(Notification).filter(Notification.family_id == demo_id, Notification.scheme_id == s_id).first():
                     db.add(Notification(
-                        family_id=demo_family_id,
+                        family_id=demo_id,
                         scheme_id=s_id,
                         message=msg,
                         read=is_read
                     ))
                     db.commit()
 
-        # Seed users (Citizen Priya, Gujarat Officer, Verifier)
+        print("5. Seeding default role-based user accounts...")
         default_users = [
-            {"email": "priya.sharma@parivar.gujarat.gov.in", "password": "password123", "role": "citizen", "family_id": demo_family_id},
+            {"email": "priya.sharma@parivar.gujarat.gov.in", "password": "password123", "role": "citizen", "family_id": demo_id},
             {"email": "health.officer@gujarat.gov.in", "password": "password123", "role": "officer", "dept_id": depts["Health & Family Welfare"].id},
             {"email": "education.officer@gujarat.gov.in", "password": "password123", "role": "officer", "dept_id": depts["Education Department"].id},
-            {"email": "talati.gandhinagar@gujarat.gov.in", "password": "password123", "role": "verifier"}
+            {"email": "msme.officer@gujarat.gov.in", "password": "password123", "role": "officer", "dept_id": depts["Industries & MSME"].id},
+            {"email": "talati.gandhinagar@gujarat.gov.in", "password": "password123", "role": "verifier"},
+            {"email": "admin@gujarat.gov.in", "password": "password123", "role": "admin"}
         ]
         for u in default_users:
             if not db.query(User).filter(User.email == u["email"]).first():
@@ -252,7 +461,10 @@ def init_seed_data():
                 ))
 
         db.commit()
-        print("Gujarat Government initialization and seed completed successfully!")
+        total_fam = db.query(Family).count()
+        total_users = db.query(User).count()
+        total_schemes = db.query(Scheme).count()
+        print(f"Gujarat Government Seed Complete: {total_fam} families, {total_users} users, {total_schemes} schemes!")
 
     except Exception as e:
         db.rollback()
