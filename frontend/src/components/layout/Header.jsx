@@ -1,7 +1,52 @@
 import React, { useState } from 'react';
-import { Bell, ChevronDown, User, ShieldCheck } from 'lucide-react';
+import { Bell, ChevronDown, User, ShieldCheck, Plus, Building2, UserCheck } from 'lucide-react';
 
-export default function Header({ user = { name: "Priya Sharma", role: "Citizen" }, unreadCount = 3 }) {
+export const PRESET_PROFILES = [
+  {
+    id: "citizen",
+    name: "Priya Sharma",
+    role: "Citizen",
+    email: "priya.sharma@parivar.gujarat.gov.in",
+    family_id: "GJ12345678"
+  },
+  {
+    id: "officer-health",
+    name: "Dr. K. Mehta",
+    role: "Officer",
+    email: "health.officer@gujarat.gov.in",
+    dept_id: 6,
+    department_name: "Health & Family Welfare"
+  },
+  {
+    id: "officer-education",
+    name: "Shri R. Trivedi",
+    role: "Officer",
+    email: "education.officer@gujarat.gov.in",
+    dept_id: 7,
+    department_name: "Education Department"
+  },
+  {
+    id: "officer-msme",
+    name: "Smt. N. Patel",
+    role: "Officer",
+    email: "msme.officer@gujarat.gov.in",
+    dept_id: 8,
+    department_name: "Industries & MSME"
+  },
+  {
+    id: "verifier",
+    name: "Shri V.K. Joshi",
+    role: "Verifier",
+    email: "talati.gandhinagar@gujarat.gov.in"
+  }
+];
+
+export default function Header({ 
+  currentProfile = PRESET_PROFILES[0], 
+  onProfileChange = () => {}, 
+  onOpenRegisterModal = () => {},
+  unreadCount = 3 
+}) {
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
   return (
@@ -29,13 +74,12 @@ export default function Header({ user = { name: "Priya Sharma", role: "Citizen" 
         </div>
 
         {/* Separator */}
-        <div className="hidden sm:block h-9 w-[1px] bg-slate-300" />
+        <div className="hidden md:block h-9 w-[1px] bg-slate-300" />
 
         {/* ParivarSetu Logo & Tagline */}
-        <div className="flex items-center space-x-3">
+        <div className="hidden sm:flex items-center space-x-3">
           <div className="w-10 h-10 rounded-none bg-gradient-to-tr from-orange-600 via-amber-600 to-teal-500 p-0.5 shadow-xs flex items-center justify-center">
             <div className="w-full h-full bg-white rounded-none flex items-center justify-center">
-              {/* Family nodes icon */}
               <svg viewBox="0 0 40 40" className="w-7 h-7">
                 <circle cx="20" cy="13" r="4.5" fill="#ea580c" />
                 <circle cx="12" cy="22" r="3.5" fill="#0284c7" />
@@ -59,8 +103,17 @@ export default function Header({ user = { name: "Priya Sharma", role: "Citizen" 
         </div>
       </div>
 
-      {/* Right: Notifications & User Profile */}
-      <div className="flex items-center space-x-4">
+      {/* Right: Actions & Role Switcher */}
+      <div className="flex items-center space-x-3 sm:space-x-4">
+        {/* Quick Family Register Button (for citizen demonstration) */}
+        <button
+          onClick={onOpenRegisterModal}
+          className="hidden lg:flex items-center gap-1.5 px-3 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 text-xs font-bold rounded-none cursor-pointer transition"
+        >
+          <Plus className="w-3.5 h-3.5 text-amber-800" />
+          Enroll New Family
+        </button>
+
         {/* Notification Bell */}
         <button 
           aria-label="Notifications" 
@@ -74,41 +127,72 @@ export default function Header({ user = { name: "Priya Sharma", role: "Citizen" 
           )}
         </button>
 
-        {/* Profile Card */}
+        {/* Role Switcher & Profile Card */}
         <div className="relative">
           <button 
             onClick={() => setDropdownOpen(!dropdownOpen)}
-            className="flex items-center space-x-3 px-3 py-1.5 rounded-none border border-slate-300 hover:border-orange-500 hover:bg-orange-50/30 transition cursor-pointer"
+            className="flex items-center space-x-2.5 px-3 py-1.5 rounded-none border border-slate-300 hover:border-orange-500 hover:bg-orange-50/30 transition cursor-pointer"
           >
-            <div className="w-7 h-7 rounded-none bg-orange-700 text-white flex items-center justify-center font-bold text-xs">
-              PS
+            <div className={`w-7 h-7 rounded-none text-white flex items-center justify-center font-bold text-xs ${
+              currentProfile.role === "Officer" ? 'bg-indigo-700' :
+              currentProfile.role === "Verifier" ? 'bg-teal-700' : 'bg-orange-700'
+            }`}>
+              {currentProfile.name.charAt(0)}
             </div>
             <div className="text-left hidden sm:block">
               <div className="text-xs font-bold text-slate-900 leading-tight">
-                {user.name}
+                {currentProfile.name}
               </div>
-              <div className="text-[10px] font-semibold text-slate-500 uppercase">
-                {user.role}
+              <div className="text-[10px] font-semibold text-slate-500 uppercase flex items-center gap-1">
+                <span>{currentProfile.role}</span>
+                {currentProfile.department_name && (
+                  <span className="text-orange-700">&bull; {currentProfile.department_name.split(' ')[0]}</span>
+                )}
               </div>
             </div>
             <ChevronDown className="w-4 h-4 text-slate-500" />
           </button>
 
-          {/* Profile Dropdown */}
+          {/* Interactive Actor Switcher Dropdown */}
           {dropdownOpen && (
-            <div className="absolute right-0 mt-1 w-52 bg-white rounded-none shadow-lg border border-slate-300 py-1 z-50 text-xs text-slate-700">
-              <div className="px-3 py-2 border-b border-slate-200 font-medium text-slate-600 bg-slate-50">
-                Signed in as <span className="font-bold text-slate-900">priya.sharma</span>
+            <div className="absolute right-0 mt-1 w-64 bg-white rounded-none shadow-xl border border-slate-300 py-1 z-50 text-xs text-slate-700">
+              <div className="px-3 py-2 border-b border-slate-200 font-bold text-slate-500 uppercase text-[10px] bg-slate-50">
+                Switch Role / Portal Persona (Demo)
               </div>
-              <a href="#profile" className="flex items-center gap-2 px-3 py-2 hover:bg-orange-50 hover:text-orange-700">
-                <User className="w-4 h-4" /> My Profile
-              </a>
-              <a href="#family" className="flex items-center gap-2 px-3 py-2 hover:bg-orange-50 hover:text-orange-700">
-                <ShieldCheck className="w-4 h-4" /> Verification Status
-              </a>
-              <div className="border-t border-slate-200 mt-1 pt-1">
-                <button className="w-full text-left px-3 py-2 text-red-700 font-semibold hover:bg-red-50">
-                  Log Out
+              
+              {PRESET_PROFILES.map((p) => {
+                const isSelected = currentProfile.id === p.id;
+                return (
+                  <button
+                    key={p.id}
+                    onClick={() => {
+                      onProfileChange(p);
+                      setDropdownOpen(false);
+                    }}
+                    className={`w-full text-left px-3 py-2 transition flex items-center justify-between cursor-pointer ${
+                      isSelected ? 'bg-orange-50 font-bold text-orange-900 border-l-4 border-l-orange-600' : 'hover:bg-slate-50'
+                    }`}
+                  >
+                    <div>
+                      <div className="text-xs font-bold text-slate-900">{p.name}</div>
+                      <div className="text-[10px] text-slate-500">
+                        {p.role} {p.department_name && `(${p.department_name})`}
+                      </div>
+                    </div>
+                    {isSelected && <span className="text-[10px] font-bold text-orange-700">Active</span>}
+                  </button>
+                );
+              })}
+
+              <div className="border-t border-slate-200 mt-1 p-2">
+                <button 
+                  onClick={() => {
+                    onOpenRegisterModal();
+                    setDropdownOpen(false);
+                  }}
+                  className="w-full text-center py-1 text-xs font-bold text-amber-800 bg-amber-50 hover:bg-amber-100 border border-amber-300 cursor-pointer"
+                >
+                  + Enroll New Family
                 </button>
               </div>
             </div>
