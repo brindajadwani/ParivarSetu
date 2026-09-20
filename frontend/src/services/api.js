@@ -255,6 +255,12 @@ export const api = {
     return res.json();
   },
 
+  async getAdminDashboard(token = null) {
+    const headers = token ? { Authorization: `Bearer ${token}` } : {};
+    const res = await fetch(`${API_BASE}/analytics/admin-dashboard`, { headers });
+    return res.json();
+  },
+
   // Notifications
   async listNotifications(familyId) {
     const res = await fetch(`${API_BASE}/notifications?family_id=${familyId}`);

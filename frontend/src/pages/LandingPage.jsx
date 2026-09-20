@@ -57,12 +57,12 @@ export default function LandingPage({
         onSelectProfile(matchedProfile);
       } else {
         const profile = {
-          name: res.name || officerEmail.split('@')[0],
-          role: res.role === 'verifier' ? 'Verifier' : 'Officer',
+          name: res.name || (res.role === 'admin' ? "Shri Rajesh Kumar, IAS" : officerEmail.split('@')[0]),
+          role: res.role === 'verifier' ? 'Verifier' : res.role === 'admin' ? 'Admin' : 'Officer',
           email: officerEmail,
           dept_id: res.dept_id,
           family_id: res.family_id,
-          department_name: res.department_name || (res.dept_id === 6 ? "Health & Family Welfare" : res.dept_id === 7 ? "Education Department" : "Industries & MSME")
+          department_name: res.department_name || (res.role === 'admin' ? "State Administration (GOG)" : res.dept_id === 6 ? "Health & Family Welfare" : res.dept_id === 7 ? "Education Department" : "Industries & MSME")
         };
         onSelectProfile(profile);
       }

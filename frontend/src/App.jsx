@@ -9,6 +9,7 @@ import FamilyRegistrationModal from './components/citizen/FamilyRegistrationModa
 import MyFamilyPortal from './components/citizen/MyFamilyPortal';
 import OfficerPortal from './pages/OfficerPortal';
 import VerifierPortal from './pages/VerifierPortal';
+import AdminPortal from './pages/AdminPortal';
 import LandingPage from './pages/LandingPage';
 import ErrorBoundary from './components/common/ErrorBoundary';
 import { api } from './services/api';
@@ -123,6 +124,38 @@ export default function App() {
         } catch {
           setNotifications([]);
         }
+      } else if (profile.role === "Admin") {
+        setApplications([]);
+        setEligibleSchemeIds([]);
+        setComplaints([]);
+        try {
+          const [delayedApps, provFamilies] = await Promise.all([
+            api.getDelayedApplications(activeTok).catch(() => []),
+            api.listFamilies('provisional').catch(() => [])
+          ]);
+          const adminAlerts = [];
+          if (Array.isArray(delayedApps) && delayedApps.length > 0) {
+            adminAlerts.push({
+              id: 'adm-delayed',
+              message: `${delayedApps.length} applications across state departments are delayed > 3 days (SLA alert).`,
+              targetTab: 'admin-pending',
+              read: false,
+              type: 'urgent'
+            });
+          }
+          if (Array.isArray(provFamilies) && provFamilies.length > 0) {
+            adminAlerts.push({
+              id: 'adm-prov',
+              message: `${provFamilies.length} provisional family registrations awaiting field verification by Talatis.`,
+              targetTab: 'admin-overview',
+              read: false,
+              type: 'info'
+            });
+          }
+          setNotifications(adminAlerts);
+        } catch {
+          setNotifications([]);
+        }
       }
     } catch (err) {
       console.error("Data load error:", err);
@@ -155,6 +188,8 @@ export default function App() {
       setActiveTab("officer-apps");
     } else if (profile.role === "Verifier") {
       setActiveTab("verifier-queue");
+    } else if (profile.role === "Admin") {
+      setActiveTab("admin-overview");
     } else {
       setActiveTab("dashboard");
     }
@@ -333,6 +368,18 @@ export default function App() {
             <VerifierPortal 
               token={token} 
               user={currentProfile} 
+              activeTab={activeTab}
+              onTabChange={setActiveTab}
+            />
+          )}
+
+          {/* === STATE ADMINISTRATOR PORTAL === */}
+          {currentProfile.role === "Admin" && (
+            <AdminPortal 
+              token={token} 
+              user={currentProfile} 
+              activeTab={activeTab}
+              onTabChange={setActiveTab}
             />
           )}
         </main>

@@ -9,7 +9,11 @@ import {
   User,
   ShieldCheck,
   TrendingUp,
-  Layers
+  Layers,
+  Building2,
+  Clock,
+  Target,
+  MapPin
 } from 'lucide-react';
 
 export default function Sidebar({ 
@@ -39,7 +43,17 @@ export default function Sidebar({
     { id: "verifier-all", label: "Enrolled Families", icon: Users },
   ];
 
-  const menuItems = role === "Officer" 
+  const adminItems = [
+    { id: "admin-overview", label: "Executive Overview", icon: TrendingUp },
+    { id: "admin-departments", label: "Dept Disbursals", icon: Building2 },
+    { id: "admin-pending", label: "Pending Applications", icon: Clock },
+    { id: "admin-gap", label: "Proactive Gap Analysis", icon: Target },
+    { id: "admin-districts", label: "District Saturation", icon: MapPin },
+  ];
+
+  const menuItems = role === "Admin"
+    ? adminItems
+    : role === "Officer" 
     ? officerItems 
     : role === "Verifier" 
     ? verifierItems 

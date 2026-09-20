@@ -48,9 +48,16 @@ export const PRESET_PROFILES = [
   },
   {
     id: "verifier",
-    name: "Shri V.K. Joshi",
+    name: "Shri Ramesh Joshi",
     role: "Verifier",
     email: "talati.gandhinagar@gujarat.gov.in"
+  },
+  {
+    id: "admin",
+    name: "Shri Rajesh Kumar, IAS",
+    role: "Admin",
+    email: "admin@gujarat.gov.in",
+    department_name: "State Administration (GOG)"
   }
 ];
 
@@ -249,6 +256,7 @@ export default function Header({
             className="flex items-center space-x-2.5 px-3 py-1.5 rounded-none border border-slate-300 hover:border-orange-500 hover:bg-orange-50/30 transition cursor-pointer bg-white"
           >
             <div className={`w-7 h-7 rounded-none text-white flex items-center justify-center font-bold text-xs ${
+              currentProfile.role === "Admin" ? 'bg-slate-900' :
               currentProfile.role === "Officer" ? 'bg-indigo-700' :
               currentProfile.role === "Verifier" ? 'bg-teal-700' : 'bg-orange-700'
             }`}>
@@ -285,6 +293,7 @@ export default function Header({
               <div className="p-4 space-y-3.5">
                 <div className="flex items-center space-x-3">
                   <div className={`w-11 h-11 rounded-none text-white flex items-center justify-center font-black text-base shadow-xs ${
+                    currentProfile.role === "Admin" ? 'bg-slate-900' :
                     currentProfile.role === "Officer" ? 'bg-indigo-700' :
                     currentProfile.role === "Verifier" ? 'bg-teal-700' : 'bg-orange-700'
                   }`}>
