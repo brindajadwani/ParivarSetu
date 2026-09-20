@@ -474,12 +474,12 @@ def init_seed_data():
 
         print("5. Seeding default role-based user accounts...")
         default_users = [
-            {"email": "priya.sharma@parivar.gujarat.gov.in", "password": "password123", "role": "citizen", "family_id": demo_id},
-            {"email": "health.officer@gujarat.gov.in", "password": "password123", "role": "officer", "dept_id": depts["Health & Family Welfare"].id},
-            {"email": "education.officer@gujarat.gov.in", "password": "password123", "role": "officer", "dept_id": depts["Education Department"].id},
-            {"email": "msme.officer@gujarat.gov.in", "password": "password123", "role": "officer", "dept_id": depts["Industries & MSME"].id},
-            {"email": "talati.gandhinagar@gujarat.gov.in", "password": "password123", "role": "verifier"},
-            {"email": "admin@gujarat.gov.in", "password": "password123", "role": "admin"}
+            {"email": "priya.sharma@parivar.gujarat.gov.in", "password": "Gujarat@2026", "role": "citizen", "family_id": demo_id},
+            {"email": "health.officer@gujarat.gov.in", "password": "Gujarat@2026", "role": "officer", "dept_id": depts["Health & Family Welfare"].id},
+            {"email": "education.officer@gujarat.gov.in", "password": "Gujarat@2026", "role": "officer", "dept_id": depts["Education Department"].id},
+            {"email": "msme.officer@gujarat.gov.in", "password": "Gujarat@2026", "role": "officer", "dept_id": depts["Industries & MSME"].id},
+            {"email": "talati.gandhinagar@gujarat.gov.in", "password": "Gujarat@2026", "role": "verifier"},
+            {"email": "admin@gujarat.gov.in", "password": "Gujarat@2026", "role": "admin"}
         ]
         for u in default_users:
             if not db.query(User).filter(User.email == u["email"]).first():
