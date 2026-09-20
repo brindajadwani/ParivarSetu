@@ -6,7 +6,8 @@ export default function FamilyDetailsCard({
   familyId = "GJ12345678",
   district = "Gandhinagar",
   ward = "Sector 6 / Gandhinagar",
-  memberCount = 4
+  memberCount = 4,
+  onViewProfile = () => {}
 }) {
   return (
     <div className="bg-white rounded-none p-5 border border-slate-200 border-t-3 border-t-slate-800 shadow-xs">

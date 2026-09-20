@@ -10,6 +10,7 @@ import MyFamilyPortal from './components/citizen/MyFamilyPortal';
 import OfficerPortal from './pages/OfficerPortal';
 import VerifierPortal from './pages/VerifierPortal';
 import LandingPage from './pages/LandingPage';
+import ErrorBoundary from './components/common/ErrorBoundary';
 import { api } from './services/api';
 
 export default function App() {
@@ -48,7 +49,7 @@ export default function App() {
     try {
       // 1. Schemes
       const sch = await api.listSchemes();
-      setSchemes(sch);
+      setSchemes(Array.isArray(sch) ? sch : []);
 
       // 2. If citizen, load their applications and eligible schemes
       if (profile.role === "Citizen") {
@@ -58,10 +59,10 @@ export default function App() {
           api.listComplaints({ family_id: profile.family_id }),
           api.listNotifications(profile.family_id)
         ]);
-        setApplications(apps);
-        setEligibleSchemeIds(elg.map(s => s.id));
-        setComplaints(comps);
-        setNotifications(notifs);
+        setApplications(Array.isArray(apps) ? apps : []);
+        setEligibleSchemeIds(Array.isArray(elg) ? elg.map(s => s.id) : []);
+        setComplaints(Array.isArray(comps) ? comps : []);
+        setNotifications(Array.isArray(notifs) ? notifs : []);
       }
     } catch (err) {
       console.error("Data load error:", err);
@@ -142,7 +143,8 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col font-sans text-slate-800 antialiased">
+    <ErrorBoundary onExitToLanding={handleExitToLanding}>
+      <div className="min-h-screen bg-slate-50 flex flex-col font-sans text-slate-800 antialiased">
       {/* 1. Header (Government of Gujarat & ParivarSetu with Persona Switcher) */}
       <Header 
         currentProfile={currentProfile}
@@ -265,5 +267,6 @@ export default function App() {
         }}
       />
     </div>
+    </ErrorBoundary>
   );
 }
