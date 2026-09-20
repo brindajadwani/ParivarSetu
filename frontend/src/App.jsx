@@ -27,16 +27,16 @@ export default function App() {
         <main className="flex-1 p-5 md:p-7 overflow-y-auto max-w-full">
           {activeTab === 'dashboard' && <CitizenDashboard />}
           {activeTab !== 'dashboard' && (
-            <div className="bg-white rounded-2xl p-8 border border-slate-100 shadow-xs text-center">
+            <div className="bg-white rounded-none p-8 border border-slate-200 border-t-3 border-t-orange-600 shadow-xs text-center">
               <h2 className="text-xl font-bold text-slate-800 capitalize">
                 {activeTab.replace('-', ' ')}
               </h2>
-              <p className="text-sm text-slate-500 mt-2">
+              <p className="text-sm text-slate-600 mt-2 font-medium">
                 This module is structured and ready for Phase 1 &ndash; 4 expansion.
               </p>
               <button 
                 onClick={() => setActiveTab('dashboard')}
-                className="mt-4 px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white text-xs font-semibold rounded-lg shadow-xs transition"
+                className="mt-4 px-4 py-2 bg-orange-700 hover:bg-orange-800 text-white text-xs font-bold rounded-none shadow-xs transition uppercase tracking-wider"
               >
                 Return to Dashboard
               </button>
