@@ -157,7 +157,15 @@ def list_families(
     return q.limit(limit).all()
 
 @router.put("/{family_id}/members", response_model=MemberResponse)
-def add_member(family_id: str, req: MemberCreate, db: Session = Depends(get_db)):
+def add_member(
+    family_id: str, 
+    req: MemberCreate, 
+    user_payload: TokenPayload = Depends(get_current_user_payload),
+    db: Session = Depends(get_db)
+):
+    if user_payload.role == "citizen" and user_payload.family_id and user_payload.family_id != family_id:
+        raise HTTPException(status_code=403, detail="Forbidden: Citizens cannot modify another family's records.")
+
     family = db.query(Family).filter(Family.family_id == family_id).first()
     if not family:
         raise HTTPException(status_code=404, detail="Family not found")
@@ -176,7 +184,15 @@ def add_member(family_id: str, req: MemberCreate, db: Session = Depends(get_db))
     return member
 
 @router.put("/{family_id}/health")
-def add_health_info(family_id: str, req: HealthInfoCreate, db: Session = Depends(get_db)):
+def add_health_info(
+    family_id: str, 
+    req: HealthInfoCreate, 
+    user_payload: TokenPayload = Depends(get_current_user_payload),
+    db: Session = Depends(get_db)
+):
+    if user_payload.role == "citizen" and user_payload.family_id and user_payload.family_id != family_id:
+        raise HTTPException(status_code=403, detail="Forbidden: Citizens cannot modify another family's records.")
+
     family = db.query(Family).filter(Family.family_id == family_id).first()
     if not family:
         raise HTTPException(status_code=404, detail="Family not found")
@@ -194,7 +210,15 @@ def add_health_info(family_id: str, req: HealthInfoCreate, db: Session = Depends
     return {"status": "success", "message": "Health info added and tags synchronized"}
 
 @router.put("/{family_id}/education")
-def add_education_info(family_id: str, req: EducationInfoCreate, db: Session = Depends(get_db)):
+def add_education_info(
+    family_id: str, 
+    req: EducationInfoCreate, 
+    user_payload: TokenPayload = Depends(get_current_user_payload),
+    db: Session = Depends(get_db)
+):
+    if user_payload.role == "citizen" and user_payload.family_id and user_payload.family_id != family_id:
+        raise HTTPException(status_code=403, detail="Forbidden: Citizens cannot modify another family's records.")
+
     family = db.query(Family).filter(Family.family_id == family_id).first()
     if not family:
         raise HTTPException(status_code=404, detail="Family not found")
@@ -214,7 +238,15 @@ def add_education_info(family_id: str, req: EducationInfoCreate, db: Session = D
     return {"status": "success", "message": "Education info added and tags synchronized"}
 
 @router.put("/{family_id}/business")
-def add_business_info(family_id: str, req: BusinessInfoCreate, db: Session = Depends(get_db)):
+def add_business_info(
+    family_id: str, 
+    req: BusinessInfoCreate, 
+    user_payload: TokenPayload = Depends(get_current_user_payload),
+    db: Session = Depends(get_db)
+):
+    if user_payload.role == "citizen" and user_payload.family_id and user_payload.family_id != family_id:
+        raise HTTPException(status_code=403, detail="Forbidden: Citizens cannot modify another family's records.")
+
     family = db.query(Family).filter(Family.family_id == family_id).first()
     if not family:
         raise HTTPException(status_code=404, detail="Family not found")
@@ -235,7 +267,15 @@ def add_business_info(family_id: str, req: BusinessInfoCreate, db: Session = Dep
     return {"status": "success", "message": "Business info added and tags synchronized"}
 
 @router.put("/{family_id}/bank", response_model=BankInfoResponse)
-def add_bank_info(family_id: str, req: BankInfoCreate, db: Session = Depends(get_db)):
+def add_bank_info(
+    family_id: str, 
+    req: BankInfoCreate, 
+    user_payload: TokenPayload = Depends(get_current_user_payload),
+    db: Session = Depends(get_db)
+):
+    if user_payload.role == "citizen" and user_payload.family_id and user_payload.family_id != family_id:
+        raise HTTPException(status_code=403, detail="Forbidden: Citizens cannot modify another family's records.")
+
     family = db.query(Family).filter(Family.family_id == family_id).first()
     if not family:
         raise HTTPException(status_code=404, detail="Family not found")
@@ -268,7 +308,7 @@ def add_bank_info(family_id: str, req: BankInfoCreate, db: Session = Depends(get
 def verify_family(
     family_id: str,
     action: str = Query(..., pattern="^(approve|reject)$"),
-    user_payload: TokenPayload = Depends(get_current_user_payload),
+    user_payload: TokenPayload = Depends(require_verifier),
     db: Session = Depends(get_db)
 ):
     """Verifier endpoint: transforms provisional family to permanent or rejected."""

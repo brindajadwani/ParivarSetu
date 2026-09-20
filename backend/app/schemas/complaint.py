@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from typing import Optional
 from datetime import datetime
 
@@ -19,9 +19,7 @@ class ComplaintResponse(BaseModel):
     officer_response: Optional[str] = None
     created_at: Optional[datetime] = None
     resolved_at: Optional[datetime] = None
-
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class NotificationResponse(BaseModel):
     id: int
@@ -31,6 +29,5 @@ class NotificationResponse(BaseModel):
     message: str
     read: bool
     created_at: Optional[datetime] = None
+    model_config = ConfigDict(from_attributes=True)
 
-    class Config:
-        from_attributes = True

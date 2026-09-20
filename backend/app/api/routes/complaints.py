@@ -26,6 +26,12 @@ def raise_complaint(
     if not app:
         raise HTTPException(status_code=404, detail="Application not found")
 
+    if user_payload.role == "citizen" and user_payload.family_id and app.family_id != user_payload.family_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Forbidden: Citizens cannot file grievances for applications of another family."
+        )
+
     complaint = Complaint(
         application_id=req.application_id,
         message=req.message,
@@ -116,6 +122,12 @@ def get_complaint(
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Forbidden: This complaint belongs to another department."
+        )
+
+    if user_payload.role == "citizen" and user_payload.family_id and app.family_id != user_payload.family_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Forbidden: This complaint belongs to another family."
         )
 
     res = ComplaintResponse.model_validate(complaint)

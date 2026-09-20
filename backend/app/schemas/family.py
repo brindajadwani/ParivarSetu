@@ -1,4 +1,4 @@
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, ConfigDict, field_validator
 from typing import List, Optional
 from datetime import datetime
 
@@ -12,9 +12,7 @@ class MemberCreate(BaseModel):
 class MemberResponse(MemberCreate):
     id: int
     family_id: str
-
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class HealthInfoCreate(BaseModel):
     member_id: Optional[int] = None
@@ -49,9 +47,7 @@ class BankInfoResponse(BaseModel):
     ifsc: str
     bank_name: str
     account_holder: str
-
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class FamilyRegisterRequest(BaseModel):
     head_name: str
@@ -76,6 +72,5 @@ class FamilyResponse(BaseModel):
     created_at: Optional[datetime] = None
     members: List[MemberResponse] = []
     bank_info: Optional[BankInfoResponse] = None
+    model_config = ConfigDict(from_attributes=True)
 
-    class Config:
-        from_attributes = True

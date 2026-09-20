@@ -34,6 +34,12 @@ def apply_to_scheme(
     Citizen applies for a scheme.
     Database unique constraint (family_id, member_id, scheme_id) prevents duplicate applications.
     """
+    if user_payload.role == "citizen" and user_payload.family_id and user_payload.family_id != req.family_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Forbidden: Citizens cannot apply for schemes on behalf of another family."
+        )
+
     scheme = db.query(Scheme).filter(Scheme.id == req.scheme_id, Scheme.active == True).first()
     if not scheme:
         raise HTTPException(status_code=400, detail="Scheme not found or currently inactive")
@@ -141,6 +147,13 @@ def get_application(
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Forbidden: This application belongs to another department."
+        )
+
+    # If citizen, verify family
+    if user_payload.role == "citizen" and user_payload.family_id and app.family_id != user_payload.family_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Forbidden: This application belongs to another family."
         )
 
     res = ApplicationResponse.model_validate(app)
