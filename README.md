@@ -20,6 +20,27 @@ ParivarSetu is a full-stack e-governance platform built for the **Government of 
 
 ---
 
+## 📑 Table of Contents
+
+| # | Section | Description |
+|---|---|---|
+| 1 | [📐 System Architecture](#-system-architecture) | High-level architecture diagram & data flow |
+| 2 | [🔐 Security Architecture](#-security-architecture) | JWT, bcrypt, RBAC, dept isolation, OWASP headers |
+| 3 | [🛡️ Blind Adjudication](#️-blind-adjudication-anti-bias-de-identification) | Anti-bias de-identification for officers |
+| 4 | [🧠 Generic Eligibility Engine](#-generic-eligibility-engine-auto-schema-matching) | Auto schema matching across departments |
+| 5 | [🏛️ Roles & Capabilities](#️-role-based-access--capabilities) | Citizen, Officer, Verifier, Admin |
+| 6 | [📊 Admin Analytics](#-executive-intelligence-command-centre-admin-analytics) | Executive Intelligence Command Centre |
+| 7 | [🔍 Transparency & Accountability](#-transparency--accountability) | Audit trail, DBT traceability, SLA enforcement |
+| 8 | [🏛️ Demo Credentials](#️-system-actors--demo-credentials) | All 6 personas with login details |
+| 9 | [🚀 Quick Start Guide](#-quick-start-guide) | Setup instructions for backend & frontend |
+| 10 | [🎯 Live Demo Script](#-live-demonstration-script-7-steps) | 7-step walkthrough for presentations |
+| 11 | [🧪 Test Suite](#-automated-test-suite) | 21 automated tests across 4 modules |
+| 12 | [💻 Tech Stack](#-tech-stack) | React, FastAPI, PostgreSQL, Tailwind CSS |
+| 13 | [📁 Project Structure](#-project-structure) | Complete directory tree |
+| 14 | [🔑 Key Differentiators](#-key-differentiators) | ParivarSetu vs traditional systems |
+
+---
+
 ## 📐 System Architecture
 
 ```mermaid
