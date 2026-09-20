@@ -29,58 +29,83 @@ export default function LandingPage({
 }) {
   const [showOfficerModal, setShowOfficerModal] = useState(false);
   const [showCitizenModal, setShowCitizenModal] = useState(false);
-  
-  // Custom Login Form State
-  const [loginEmail, setLoginEmail] = useState('');
-  const [loginPassword, setLoginPassword] = useState('password123');
-  const [loginLoading, setLoginLoading] = useState(false);
-  const [loginError, setLoginError] = useState(null);
 
-  const handleCustomLogin = async (e) => {
+  // Officer Login Form State
+  const [officerEmail, setOfficerEmail] = useState('');
+  const [officerPassword, setOfficerPassword] = useState('');
+  const [officerLoading, setOfficerLoading] = useState(false);
+  const [officerError, setOfficerError] = useState(null);
+
+  // Citizen Login Form State
+  const [citizenEmail, setCitizenEmail] = useState('');
+  const [citizenPassword, setCitizenPassword] = useState('');
+  const [citizenLoading, setCitizenLoading] = useState(false);
+  const [citizenError, setCitizenError] = useState(null);
+
+  const handleOfficerLogin = async (e) => {
     e.preventDefault();
-    setLoginLoading(true);
-    setLoginError(null);
+    setOfficerLoading(true);
+    setOfficerError(null);
     try {
-      const res = await api.login(loginEmail, loginPassword);
-      // Determine role from profile or token response
-      const matchedProfile = PRESET_PROFILES.find(p => p.email.toLowerCase() === loginEmail.toLowerCase());
+      const res = await api.login(officerEmail, officerPassword);
+      const matchedProfile = PRESET_PROFILES.find(p => p.email.toLowerCase() === officerEmail.toLowerCase());
       if (matchedProfile) {
         onSelectProfile(matchedProfile);
       } else {
-        // Fallback reconstructed profile
         const profile = {
-          name: res.name || loginEmail.split('@')[0],
-          role: res.role === 'officer' ? 'Officer' : res.role === 'verifier' ? 'Verifier' : 'Citizen',
-          email: loginEmail,
+          name: res.name || officerEmail.split('@')[0],
+          role: res.role === 'verifier' ? 'Verifier' : 'Officer',
+          email: officerEmail,
           dept_id: res.dept_id,
-          family_id: res.family_id || "GJ12345678",
+          family_id: res.family_id,
           department_name: res.department_name || (res.dept_id === 6 ? "Health & Family Welfare" : res.dept_id === 7 ? "Education Department" : "Industries & MSME")
         };
         onSelectProfile(profile);
       }
       setShowOfficerModal(false);
+    } catch (err) {
+      setOfficerError(err.message || "Invalid credentials. Please check official email and password.");
+    } finally {
+      setOfficerLoading(false);
+    }
+  };
+
+  const handleCitizenLogin = async (e) => {
+    e.preventDefault();
+    setCitizenLoading(true);
+    setCitizenError(null);
+    try {
+      const res = await api.login(citizenEmail, citizenPassword);
+      const matchedProfile = PRESET_PROFILES.find(p => p.email.toLowerCase() === citizenEmail.toLowerCase());
+      if (matchedProfile) {
+        onSelectProfile(matchedProfile);
+      } else {
+        const profile = {
+          name: res.name || citizenEmail.split('@')[0],
+          role: 'Citizen',
+          email: citizenEmail,
+          family_id: res.family_id || "GJ12345678"
+        };
+        onSelectProfile(profile);
+      }
       setShowCitizenModal(false);
     } catch (err) {
-      setLoginError(err.message || "Invalid credentials. Please verify email and password.");
+      setCitizenError(err.message || "Invalid credentials. Please check citizen email and password.");
     } finally {
-      setLoginLoading(false);
+      setCitizenLoading(false);
     }
   };
 
-  const handleQuickOfficerLogin = (profileId) => {
-    const profile = PRESET_PROFILES.find(p => p.id === profileId);
-    if (profile) {
-      onSelectProfile(profile);
-      setShowOfficerModal(false);
-    }
+  const fillOfficerCredentials = (email, password) => {
+    setOfficerEmail(email);
+    setOfficerPassword(password);
+    setOfficerError(null);
   };
 
-  const handleQuickCitizenLogin = () => {
-    const citizen = PRESET_PROFILES.find(p => p.id === 'citizen');
-    if (citizen) {
-      onSelectProfile(citizen);
-      setShowCitizenModal(false);
-    }
+  const fillCitizenCredentials = (email, password) => {
+    setCitizenEmail(email);
+    setCitizenPassword(password);
+    setCitizenError(null);
   };
 
   return (
@@ -166,11 +191,11 @@ export default function LandingPage({
 
             <div className="flex flex-wrap items-center gap-3 pt-2">
               <button
-                onClick={handleQuickCitizenLogin}
+                onClick={() => setShowCitizenModal(true)}
                 className="px-5 py-3 bg-orange-600 hover:bg-orange-700 text-white text-xs sm:text-sm font-bold rounded-none shadow-lg cursor-pointer flex items-center gap-2 transition"
               >
                 <Users className="w-4 h-4" />
-                Citizen Portal (Priya Sharma Demo)
+                Citizen Portal Login
               </button>
               <button
                 onClick={onOpenRegisterModal}
@@ -230,10 +255,10 @@ export default function LandingPage({
               </div>
               <div className="grid grid-cols-2 gap-2 mt-3">
                 <button
-                  onClick={handleQuickCitizenLogin}
+                  onClick={() => setShowCitizenModal(true)}
                   className="w-full py-1.5 bg-orange-700 hover:bg-orange-800 text-white font-bold text-xs rounded-none cursor-pointer text-center"
                 >
-                  Demo Citizen Login
+                  Citizen Login
                 </button>
                 <button
                   onClick={onOpenRegisterModal}
@@ -312,9 +337,9 @@ export default function LandingPage({
               <div className="w-8 h-8 bg-emerald-100 text-emerald-800 font-black text-xs flex items-center justify-center">
                 03
               </div>
-              <h3 className="text-sm font-bold text-slate-900">3. Algorithmic Matching</h3>
+              <h3 className="text-sm font-bold text-slate-900">3. Auto-Matches Schemes for Family</h3>
               <p className="text-xs text-slate-600 leading-relaxed">
-                The Generic Eligibility Engine automatically matches family income, caste, and tags to notify eligible schemes proactively.
+                Automatically matches eligible government welfare schemes for your family based on your verified household details.
               </p>
             </div>
 
@@ -355,12 +380,6 @@ export default function LandingPage({
                 Integrated Gujarat Government Schemes
               </h2>
             </div>
-            <button
-              onClick={handleQuickCitizenLogin}
-              className="text-xs font-bold text-orange-700 hover:text-orange-900 flex items-center gap-1 cursor-pointer"
-            >
-              Explore Schemes in Citizen Catalog &rarr;
-            </button>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
@@ -432,7 +451,7 @@ export default function LandingPage({
           </div>
           <div className="p-4">
             <div className="text-3xl sm:text-4xl font-black text-orange-400">29+</div>
-            <div className="text-xs text-slate-300 uppercase font-bold mt-1">Enrolled Demo Families</div>
+            <div className="text-xs text-slate-300 uppercase font-bold mt-1">Registered Gujarat Families</div>
           </div>
           <div className="p-4">
             <div className="text-3xl sm:text-4xl font-black text-orange-400">18</div>
@@ -506,16 +525,16 @@ export default function LandingPage({
       {/* ============================================================ */}
       {showOfficerModal && (
         <div className="fixed inset-0 z-50 bg-slate-900/70 flex items-center justify-center p-4 backdrop-blur-xs">
-          <div className="bg-white rounded-none border-2 border-orange-600 w-full max-w-xl shadow-2xl p-6 space-y-5">
+          <div className="bg-white rounded-none border-2 border-orange-600 w-full max-w-2xl shadow-2xl p-6 space-y-5 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between border-b border-slate-200 pb-3">
               <div className="flex items-center gap-2">
                 <Building2 className="w-5 h-5 text-orange-700" />
                 <div>
                   <h3 className="text-sm font-black text-slate-900">
-                    Department Officer &amp; Verifier Login
+                    Department Officer &amp; Verifier Portal Login
                   </h3>
                   <div className="text-[11px] text-slate-500 font-medium">
-                    Server-isolated role-based authentication
+                    Secure JWT authentication &bull; Government of Gujarat
                   </div>
                 </div>
               </div>
@@ -527,122 +546,194 @@ export default function LandingPage({
               </button>
             </div>
 
-            {/* Quick 1-Click Role Presets */}
-            <div>
-              <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-600 mb-2">
-                Quick 1-Click Role Presets (Demo Evaluator Access):
-              </label>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
-                <button
-                  type="button"
-                  onClick={() => handleQuickOfficerLogin("officer-health")}
-                  className="p-2.5 border border-rose-200 bg-rose-50/60 hover:bg-rose-100 hover:border-rose-400 text-left rounded-none cursor-pointer transition"
-                >
-                  <div className="font-bold text-rose-900 flex items-center gap-1.5">
-                    <HeartPulse className="w-3.5 h-3.5 text-rose-700" />
-                    Dr. Rajesh Mehta
-                  </div>
-                  <div className="text-[10px] text-rose-700 mt-0.5">Health &amp; Family Welfare (Dept #6)</div>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => handleQuickOfficerLogin("officer-education")}
-                  className="p-2.5 border border-sky-200 bg-sky-50/60 hover:bg-sky-100 hover:border-sky-400 text-left rounded-none cursor-pointer transition"
-                >
-                  <div className="font-bold text-sky-900 flex items-center gap-1.5">
-                    <GraduationCap className="w-3.5 h-3.5 text-sky-700" />
-                    Shri Kirit Trivedi
-                  </div>
-                  <div className="text-[10px] text-sky-700 mt-0.5">Education Department (Dept #7)</div>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => handleQuickOfficerLogin("officer-msme")}
-                  className="p-2.5 border border-purple-200 bg-purple-50/60 hover:bg-purple-100 hover:border-purple-400 text-left rounded-none cursor-pointer transition"
-                >
-                  <div className="font-bold text-purple-900 flex items-center gap-1.5">
-                    <Briefcase className="w-3.5 h-3.5 text-purple-700" />
-                    Smt. Hina Patel
-                  </div>
-                  <div className="text-[10px] text-purple-700 mt-0.5">Industries &amp; MSME (Dept #8)</div>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => handleQuickOfficerLogin("verifier")}
-                  className="p-2.5 border border-emerald-200 bg-emerald-50/60 hover:bg-emerald-100 hover:border-emerald-400 text-left rounded-none cursor-pointer transition"
-                >
-                  <div className="font-bold text-emerald-900 flex items-center gap-1.5">
-                    <ShieldCheck className="w-3.5 h-3.5 text-emerald-700" />
-                    Shri Ramesh Joshi
-                  </div>
-                  <div className="text-[10px] text-emerald-700 mt-0.5">Talati-cum-Mantri (Field Verifier)</div>
-                </button>
-              </div>
-            </div>
-
-            <div className="relative flex py-1 items-center">
-              <div className="grow border-t border-slate-200"></div>
-              <span className="shrink mx-3 text-[10px] uppercase font-bold text-slate-400">Or Login with Official Email</span>
-              <div className="grow border-t border-slate-200"></div>
-            </div>
-
             {/* Email & Password Authentication Form */}
-            <form onSubmit={handleCustomLogin} className="space-y-3 text-xs">
-              {loginError && (
+            <form onSubmit={handleOfficerLogin} className="space-y-3 text-xs bg-slate-50 p-4 border border-slate-200">
+              <div className="text-xs font-bold text-slate-900 mb-1 flex items-center gap-1.5">
+                <Lock className="w-3.5 h-3.5 text-orange-600" />
+                Sign In with Official Government Account
+              </div>
+
+              {officerError && (
                 <div className="p-2.5 bg-rose-50 border border-rose-200 text-rose-800 text-xs flex items-center gap-1.5">
                   <AlertCircle className="w-4 h-4 shrink-0" />
-                  <span>{loginError}</span>
+                  <span>{officerError}</span>
                 </div>
               )}
 
-              <div>
-                <label className="block font-bold text-slate-700 mb-1">Official Government Email</label>
-                <input
-                  type="email"
-                  required
-                  placeholder="e.g. health.officer@gujarat.gov.in"
-                  value={loginEmail}
-                  onChange={e => setLoginEmail(e.target.value)}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-none focus:outline-hidden focus:border-orange-500"
-                />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">Official Government Email</label>
+                  <input
+                    type="email"
+                    required
+                    placeholder="e.g. health.officer@gujarat.gov.in"
+                    value={officerEmail}
+                    onChange={e => setOfficerEmail(e.target.value)}
+                    className="w-full px-3 py-2 bg-white border border-slate-300 rounded-none focus:outline-hidden focus:border-orange-500 font-mono text-xs"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">Password</label>
+                  <input
+                    type="password"
+                    required
+                    placeholder="Enter password"
+                    value={officerPassword}
+                    onChange={e => setOfficerPassword(e.target.value)}
+                    className="w-full px-3 py-2 bg-white border border-slate-300 rounded-none focus:outline-hidden focus:border-orange-500 text-xs"
+                  />
+                </div>
               </div>
 
-              <div>
-                <label className="block font-bold text-slate-700 mb-1">Password</label>
-                <input
-                  type="password"
-                  required
-                  placeholder="Enter your password"
-                  value={loginPassword}
-                  onChange={e => setLoginPassword(e.target.value)}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-none focus:outline-hidden focus:border-orange-500"
-                />
-                <span className="text-[10px] text-slate-500 mt-0.5 block">
-                  Default password for demo accounts is: <code className="font-mono text-orange-800">password123</code>
-                </span>
-              </div>
-
-              <div className="pt-2 flex justify-end gap-2">
+              <div className="pt-2 flex items-center justify-end gap-2">
                 <button
                   type="button"
                   onClick={() => setShowOfficerModal(false)}
-                  className="px-4 py-1.5 text-xs text-slate-700 font-bold border border-slate-300 rounded-none cursor-pointer"
+                  className="px-4 py-2 text-xs text-slate-700 font-bold border border-slate-300 rounded-none cursor-pointer bg-white hover:bg-slate-100"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  disabled={loginLoading}
-                  className="px-5 py-1.5 text-xs bg-orange-700 hover:bg-orange-800 text-white font-bold rounded-none cursor-pointer shadow-xs flex items-center gap-1.5"
+                  disabled={officerLoading}
+                  className="px-5 py-2 text-xs bg-orange-700 hover:bg-orange-800 text-white font-bold rounded-none cursor-pointer shadow-xs flex items-center gap-1.5"
                 >
                   <Lock className="w-3 h-3" />
-                  {loginLoading ? "Authenticating..." : "Sign In to Department"}
+                  {officerLoading ? "Verifying Credentials..." : "Sign In to Department Portal"}
                 </button>
               </div>
             </form>
+
+            {/* Official Accounts Directory */}
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-700">
+                  Official Department Login Directory &amp; Credentials:
+                </label>
+                <span className="text-[10px] text-slate-500 font-medium">Click &quot;Auto-fill&quot; to populate login inputs</span>
+              </div>
+
+              <div className="border border-slate-200 overflow-hidden text-xs">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="bg-slate-100 text-slate-700 text-[10px] uppercase font-bold border-b border-slate-200">
+                      <th className="p-2">Role / Department</th>
+                      <th className="p-2">Official Name</th>
+                      <th className="p-2">Official Email</th>
+                      <th className="p-2">Password</th>
+                      <th className="p-2 text-right">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-200">
+                    <tr className="hover:bg-slate-50">
+                      <td className="p-2 font-bold text-rose-900">
+                        <div className="flex items-center gap-1.5">
+                          <HeartPulse className="w-3.5 h-3.5 text-rose-700" />
+                          Health &amp; Family Welfare
+                        </div>
+                      </td>
+                      <td className="p-2 text-slate-700">Dr. Rajesh Mehta</td>
+                      <td className="p-2 font-mono text-slate-800 text-[11px]">health.officer@gujarat.gov.in</td>
+                      <td className="p-2 font-mono text-slate-600 text-[11px]">password123</td>
+                      <td className="p-2 text-right">
+                        <button
+                          type="button"
+                          onClick={() => fillOfficerCredentials("health.officer@gujarat.gov.in", "password123")}
+                          className="px-2 py-1 bg-white hover:bg-slate-100 text-orange-700 font-bold border border-orange-300 rounded-none cursor-pointer text-[10px]"
+                        >
+                          Auto-fill
+                        </button>
+                      </td>
+                    </tr>
+
+                    <tr className="hover:bg-slate-50">
+                      <td className="p-2 font-bold text-sky-900">
+                        <div className="flex items-center gap-1.5">
+                          <GraduationCap className="w-3.5 h-3.5 text-sky-700" />
+                          Education Department
+                        </div>
+                      </td>
+                      <td className="p-2 text-slate-700">Shri Kirit Trivedi</td>
+                      <td className="p-2 font-mono text-slate-800 text-[11px]">education.officer@gujarat.gov.in</td>
+                      <td className="p-2 font-mono text-slate-600 text-[11px]">password123</td>
+                      <td className="p-2 text-right">
+                        <button
+                          type="button"
+                          onClick={() => fillOfficerCredentials("education.officer@gujarat.gov.in", "password123")}
+                          className="px-2 py-1 bg-white hover:bg-slate-100 text-orange-700 font-bold border border-orange-300 rounded-none cursor-pointer text-[10px]"
+                        >
+                          Auto-fill
+                        </button>
+                      </td>
+                    </tr>
+
+                    <tr className="hover:bg-slate-50">
+                      <td className="p-2 font-bold text-purple-900">
+                        <div className="flex items-center gap-1.5">
+                          <Briefcase className="w-3.5 h-3.5 text-purple-700" />
+                          Industries &amp; MSME
+                        </div>
+                      </td>
+                      <td className="p-2 text-slate-700">Smt. Hina Patel</td>
+                      <td className="p-2 font-mono text-slate-800 text-[11px]">msme.officer@gujarat.gov.in</td>
+                      <td className="p-2 font-mono text-slate-600 text-[11px]">password123</td>
+                      <td className="p-2 text-right">
+                        <button
+                          type="button"
+                          onClick={() => fillOfficerCredentials("msme.officer@gujarat.gov.in", "password123")}
+                          className="px-2 py-1 bg-white hover:bg-slate-100 text-orange-700 font-bold border border-orange-300 rounded-none cursor-pointer text-[10px]"
+                        >
+                          Auto-fill
+                        </button>
+                      </td>
+                    </tr>
+
+                    <tr className="hover:bg-slate-50">
+                      <td className="p-2 font-bold text-emerald-900">
+                        <div className="flex items-center gap-1.5">
+                          <ShieldCheck className="w-3.5 h-3.5 text-emerald-700" />
+                          Talati-cum-Mantri (Field)
+                        </div>
+                      </td>
+                      <td className="p-2 text-slate-700">Shri Ramesh Joshi</td>
+                      <td className="p-2 font-mono text-slate-800 text-[11px]">talati.gandhinagar@gujarat.gov.in</td>
+                      <td className="p-2 font-mono text-slate-600 text-[11px]">password123</td>
+                      <td className="p-2 text-right">
+                        <button
+                          type="button"
+                          onClick={() => fillOfficerCredentials("talati.gandhinagar@gujarat.gov.in", "password123")}
+                          className="px-2 py-1 bg-white hover:bg-slate-100 text-orange-700 font-bold border border-orange-300 rounded-none cursor-pointer text-[10px]"
+                        >
+                          Auto-fill
+                        </button>
+                      </td>
+                    </tr>
+
+                    <tr className="hover:bg-slate-50">
+                      <td className="p-2 font-bold text-slate-900">
+                        <div className="flex items-center gap-1.5">
+                          <Building2 className="w-3.5 h-3.5 text-slate-700" />
+                          State Administrator
+                        </div>
+                      </td>
+                      <td className="p-2 text-slate-700">Admin Office</td>
+                      <td className="p-2 font-mono text-slate-800 text-[11px]">admin@gujarat.gov.in</td>
+                      <td className="p-2 font-mono text-slate-600 text-[11px]">password123</td>
+                      <td className="p-2 text-right">
+                        <button
+                          type="button"
+                          onClick={() => fillOfficerCredentials("admin@gujarat.gov.in", "password123")}
+                          className="px-2 py-1 bg-white hover:bg-slate-100 text-orange-700 font-bold border border-orange-300 rounded-none cursor-pointer text-[10px]"
+                        >
+                          Auto-fill
+                        </button>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
           </div>
         </div>
       )}
@@ -652,13 +743,18 @@ export default function LandingPage({
       {/* ============================================================ */}
       {showCitizenModal && (
         <div className="fixed inset-0 z-50 bg-slate-900/70 flex items-center justify-center p-4 backdrop-blur-xs">
-          <div className="bg-white rounded-none border-2 border-orange-600 w-full max-w-md shadow-2xl p-6 space-y-4">
+          <div className="bg-white rounded-none border-2 border-orange-600 w-full max-w-lg shadow-2xl p-6 space-y-5">
             <div className="flex items-center justify-between border-b border-slate-200 pb-3">
               <div className="flex items-center gap-2">
                 <Users className="w-5 h-5 text-orange-700" />
-                <h3 className="text-sm font-black text-slate-900">
-                  Citizen Portal Access
-                </h3>
+                <div>
+                  <h3 className="text-sm font-black text-slate-900">
+                    Citizen Portal Login
+                  </h3>
+                  <div className="text-[11px] text-slate-500 font-medium">
+                    Access Family ID, DBT receipts &amp; Scheme benefits
+                  </div>
+                </div>
               </div>
               <button 
                 onClick={() => setShowCitizenModal(false)}
@@ -668,24 +764,93 @@ export default function LandingPage({
               </button>
             </div>
 
-            <p className="text-xs text-slate-600">
-              Sign in to view your family profile, eligible scheme notifications, and track submitted applications.
-            </p>
+            {/* Email & Password Authentication Form */}
+            <form onSubmit={handleCitizenLogin} className="space-y-3 text-xs bg-slate-50 p-4 border border-slate-200">
+              <div className="text-xs font-bold text-slate-900 mb-1 flex items-center gap-1.5">
+                <Lock className="w-3.5 h-3.5 text-orange-600" />
+                Sign In with Registered Citizen Credentials
+              </div>
 
-            <div className="p-4 border border-orange-200 bg-orange-50/60 space-y-2.5">
-              <div className="font-bold text-xs text-slate-900">
-                Demo Citizen Account: Smt. Priya Sharma
+              {citizenError && (
+                <div className="p-2.5 bg-rose-50 border border-rose-200 text-rose-800 text-xs flex items-center gap-1.5">
+                  <AlertCircle className="w-4 h-4 shrink-0" />
+                  <span>{citizenError}</span>
+                </div>
+              )}
+
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">Registered Citizen Email</label>
+                <input
+                  type="email"
+                  required
+                  placeholder="e.g. priya.sharma@parivar.gujarat.gov.in"
+                  value={citizenEmail}
+                  onChange={e => setCitizenEmail(e.target.value)}
+                  className="w-full px-3 py-2 bg-white border border-slate-300 rounded-none focus:outline-hidden focus:border-orange-500 font-mono text-xs"
+                />
               </div>
-              <div className="text-[11px] text-slate-600">
-                Parivar ID: <code className="font-mono font-bold text-orange-800">GJ12345678</code> &bull; Gandhinagar (BPL)
+
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">Password</label>
+                <input
+                  type="password"
+                  required
+                  placeholder="Enter citizen password"
+                  value={citizenPassword}
+                  onChange={e => setCitizenPassword(e.target.value)}
+                  className="w-full px-3 py-2 bg-white border border-slate-300 rounded-none focus:outline-hidden focus:border-orange-500 text-xs"
+                />
               </div>
-              <button
-                onClick={handleQuickCitizenLogin}
-                className="w-full py-2 bg-orange-700 hover:bg-orange-800 text-white font-bold text-xs rounded-none cursor-pointer shadow-xs flex items-center justify-center gap-1.5"
-              >
-                <Users className="w-3.5 h-3.5" />
-                Continue as Smt. Priya Sharma
-              </button>
+
+              <div className="pt-2 flex items-center justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setShowCitizenModal(false)}
+                  className="px-4 py-2 text-xs text-slate-700 font-bold border border-slate-300 rounded-none cursor-pointer bg-white hover:bg-slate-100"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={citizenLoading}
+                  className="px-5 py-2 text-xs bg-orange-700 hover:bg-orange-800 text-white font-bold rounded-none cursor-pointer shadow-xs flex items-center gap-1.5"
+                >
+                  <Lock className="w-3 h-3" />
+                  {citizenLoading ? "Verifying..." : "Sign In to Citizen Portal"}
+                </button>
+              </div>
+            </form>
+
+            {/* Official Citizen Credentials Directory */}
+            <div className="p-3.5 border border-amber-200 bg-amber-50/70 text-xs space-y-2">
+              <div className="flex items-center justify-between">
+                <div className="font-bold text-slate-900 flex items-center gap-1.5">
+                  <UserCheck className="w-4 h-4 text-orange-700" />
+                  Registered Citizen Login Information:
+                </div>
+                <button
+                  type="button"
+                  onClick={() => fillCitizenCredentials("priya.sharma@parivar.gujarat.gov.in", "password123")}
+                  className="px-2.5 py-1 bg-white hover:bg-slate-100 text-orange-800 font-bold border border-orange-300 rounded-none cursor-pointer text-[10px]"
+                >
+                  Auto-fill Credentials
+                </button>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-2 text-[11px] text-slate-700 pt-1">
+                <div>
+                  <span className="font-bold text-slate-500">Head of Family:</span> Smt. Priya Sharma
+                </div>
+                <div>
+                  <span className="font-bold text-slate-500">Family ID:</span> <code className="font-mono font-bold text-orange-800">GJ12345678</code>
+                </div>
+                <div>
+                  <span className="font-bold text-slate-500">Email:</span> <code className="font-mono text-slate-800">priya.sharma@parivar.gujarat.gov.in</code>
+                </div>
+                <div>
+                  <span className="font-bold text-slate-500">Password:</span> <code className="font-mono text-slate-800">password123</code>
+                </div>
+              </div>
             </div>
 
             <div className="pt-2 text-center text-xs text-slate-600 space-y-2 border-t border-slate-100">
