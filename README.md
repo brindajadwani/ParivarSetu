@@ -117,7 +117,7 @@ erDiagram
 
     BANK_INFO {
         int id PK "auto-increment"
-        string family_id FK-UK "UNIQUE, CASCADE on delete"
+        string family_id UK "UNIQUE FK, CASCADE on delete"
         string account_number_masked "****4321"
         string ifsc "SBIN0001234"
         string bank_name "State Bank of India"
