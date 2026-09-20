@@ -1,5 +1,16 @@
 import React, { useState } from 'react';
-import { Bell, ChevronDown, User, ShieldCheck, Plus, Building2, UserCheck, Home } from 'lucide-react';
+import { 
+  Bell, 
+  ChevronDown, 
+  User, 
+  ShieldCheck, 
+  Building2, 
+  Home, 
+  LogOut, 
+  Mail, 
+  CheckCircle2,
+  FileBadge
+} from 'lucide-react';
 
 export const PRESET_PROFILES = [
   {
@@ -46,9 +57,19 @@ export default function Header({
   onProfileChange = () => {}, 
   onOpenRegisterModal = () => {},
   onExitToLanding = () => {},
-  unreadCount = 3 
+  onLogout = () => {},
+  unreadCount = 0 
 }) {
   const [dropdownOpen, setDropdownOpen] = useState(false);
+
+  const handleLogoutClick = () => {
+    setDropdownOpen(false);
+    if (onLogout) {
+      onLogout();
+    } else if (onExitToLanding) {
+      onExitToLanding();
+    }
+  };
 
   return (
     <header className="sticky top-0 z-40 bg-white border-b-2 border-orange-500 shadow-xs px-6 py-2.5 flex items-center justify-between">
@@ -104,17 +125,8 @@ export default function Header({
         </div>
       </div>
 
-      {/* Right: Actions & Role Switcher */}
+      {/* Right: Actions & User Details */}
       <div className="flex items-center space-x-3 sm:space-x-4">
-        {/* Quick Family Register Button (for citizen demonstration) */}
-        <button
-          onClick={onOpenRegisterModal}
-          className="hidden lg:flex items-center gap-1.5 px-3 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 text-xs font-bold rounded-none cursor-pointer transition"
-        >
-          <Plus className="w-3.5 h-3.5 text-amber-800" />
-          Enroll New Family
-        </button>
-
         {/* Notification Bell */}
         <button 
           aria-label="Notifications" 
@@ -128,21 +140,11 @@ export default function Header({
           )}
         </button>
 
-        {/* Return to Public Landing Page Button */}
-        <button
-          onClick={onExitToLanding}
-          className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold border border-slate-300 rounded-none cursor-pointer transition shadow-xs"
-          title="Return to Public Landing Page"
-        >
-          <Home className="w-3.5 h-3.5 text-slate-600" />
-          <span className="hidden md:inline">Portal Home</span>
-        </button>
-
-        {/* Role Switcher & Profile Card */}
+        {/* User Profile Card Dropdown */}
         <div className="relative">
           <button 
             onClick={() => setDropdownOpen(!dropdownOpen)}
-            className="flex items-center space-x-2.5 px-3 py-1.5 rounded-none border border-slate-300 hover:border-orange-500 hover:bg-orange-50/30 transition cursor-pointer"
+            className="flex items-center space-x-2.5 px-3 py-1.5 rounded-none border border-slate-300 hover:border-orange-500 hover:bg-orange-50/30 transition cursor-pointer bg-white"
           >
             <div className={`w-7 h-7 rounded-none text-white flex items-center justify-center font-bold text-xs ${
               currentProfile.role === "Officer" ? 'bg-indigo-700' :
@@ -164,61 +166,94 @@ export default function Header({
             <ChevronDown className="w-4 h-4 text-slate-500" />
           </button>
 
-          {/* Interactive Actor Switcher Dropdown */}
+          {/* Logged In User Profile Details Modal/Dropdown */}
           {dropdownOpen && (
-            <div className="absolute right-0 mt-1 w-64 bg-white rounded-none shadow-xl border border-slate-300 py-1 z-50 text-xs text-slate-700">
-              <div className="px-3 py-2 border-b border-slate-200 font-bold text-slate-500 uppercase text-[10px] bg-slate-50">
-                Switch Role / Portal Persona (Demo)
+            <div className="absolute right-0 mt-1 w-80 bg-white rounded-none shadow-2xl border-2 border-orange-600 py-0 z-50 text-xs text-slate-700">
+              <div className="px-4 py-2.5 border-b border-slate-200 font-bold text-slate-800 uppercase text-[10px] bg-slate-100 flex items-center justify-between">
+                <span className="flex items-center gap-1.5 text-orange-900 font-black">
+                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+                  Authenticated Profile
+                </span>
+                <span className="text-emerald-700 font-bold text-[9px] bg-emerald-50 px-1.5 py-0.5 border border-emerald-300">
+                  Active Session
+                </span>
               </div>
-              
-              {PRESET_PROFILES.map((p) => {
-                const isSelected = currentProfile.id === p.id;
-                return (
-                  <button
-                    key={p.id}
-                    onClick={() => {
-                      onProfileChange(p);
-                      setDropdownOpen(false);
-                    }}
-                    className={`w-full text-left px-3 py-2 transition flex items-center justify-between cursor-pointer ${
-                      isSelected ? 'bg-orange-50 font-bold text-orange-900 border-l-4 border-l-orange-600' : 'hover:bg-slate-50'
-                    }`}
-                  >
-                    <div>
-                      <div className="text-xs font-bold text-slate-900">{p.name}</div>
-                      <div className="text-[10px] text-slate-500">
-                        {p.role} {p.department_name && `(${p.department_name})`}
-                      </div>
-                    </div>
-                    {isSelected && <span className="text-[10px] font-bold text-orange-700">Active</span>}
-                  </button>
-                );
-              })}
 
-              <div className="border-t border-slate-200 mt-1 p-2 space-y-1.5">
-                <button 
-                  onClick={() => {
-                    onOpenRegisterModal();
-                    setDropdownOpen(false);
-                  }}
-                  className="w-full text-center py-1 text-xs font-bold text-amber-800 bg-amber-50 hover:bg-amber-100 border border-amber-300 cursor-pointer"
+              {/* Logged in User Card */}
+              <div className="p-4 space-y-3.5">
+                <div className="flex items-center space-x-3">
+                  <div className={`w-11 h-11 rounded-none text-white flex items-center justify-center font-black text-base shadow-xs ${
+                    currentProfile.role === "Officer" ? 'bg-indigo-700' :
+                    currentProfile.role === "Verifier" ? 'bg-teal-700' : 'bg-orange-700'
+                  }`}>
+                    {currentProfile.name.charAt(0)}
+                  </div>
+                  <div className="min-w-0">
+                    <div className="text-sm font-black text-slate-900 truncate">
+                      {currentProfile.name}
+                    </div>
+                    <div className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-orange-800 bg-orange-100/70 px-2 py-0.5 mt-0.5">
+                      {currentProfile.role}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="p-2.5 bg-slate-50 border border-slate-200 text-xs space-y-1.5">
+                  <div className="flex items-center justify-between text-[11px]">
+                    <span className="text-slate-500 font-medium flex items-center gap-1">
+                      <Mail className="w-3 h-3" /> Official Email:
+                    </span>
+                    <span className="font-mono font-semibold text-slate-800 text-[10.5px]">
+                      {currentProfile.email}
+                    </span>
+                  </div>
+
+                  {currentProfile.family_id && (
+                    <div className="flex items-center justify-between text-[11px]">
+                      <span className="text-slate-500 font-medium flex items-center gap-1">
+                        <FileBadge className="w-3 h-3" /> Family ID:
+                      </span>
+                      <span className="font-mono font-black text-orange-800">
+                        {currentProfile.family_id}
+                      </span>
+                    </div>
+                  )}
+
+                  {currentProfile.department_name && (
+                    <div className="flex items-center justify-between text-[11px]">
+                      <span className="text-slate-500 font-medium flex items-center gap-1">
+                        <Building2 className="w-3 h-3" /> Department:
+                      </span>
+                      <span className="font-bold text-slate-800 text-right">
+                        {currentProfile.department_name}
+                      </span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Log Out Button */}
+                <button
+                  type="button"
+                  onClick={handleLogoutClick}
+                  className="w-full py-2 bg-rose-50 hover:bg-rose-100 text-rose-800 border border-rose-300 font-bold text-xs rounded-none cursor-pointer flex items-center justify-center gap-1.5 transition shadow-xs"
                 >
-                  + Enroll New Family
-                </button>
-                <button 
-                  onClick={() => {
-                    onExitToLanding();
-                    setDropdownOpen(false);
-                  }}
-                  className="w-full text-center py-1 text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-300 cursor-pointer flex items-center justify-center gap-1"
-                >
-                  <Home className="w-3.5 h-3.5" />
-                  Return to Public Landing Page
+                  <LogOut className="w-3.5 h-3.5 text-rose-700" />
+                  Sign Out / Log Out
                 </button>
               </div>
             </div>
           )}
         </div>
+
+        {/* Header Direct Log Out Button */}
+        <button
+          onClick={handleLogoutClick}
+          className="flex items-center gap-1.5 px-3 py-1.5 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold rounded-none cursor-pointer transition shadow-xs"
+          title="Sign Out of ParivarSetu"
+        >
+          <LogOut className="w-3.5 h-3.5" />
+          <span className="hidden sm:inline">Log Out</span>
+        </button>
       </div>
     </header>
   );

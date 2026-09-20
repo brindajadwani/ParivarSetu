@@ -145,12 +145,12 @@ export default function App() {
   return (
     <ErrorBoundary onExitToLanding={handleExitToLanding}>
       <div className="min-h-screen bg-slate-50 flex flex-col font-sans text-slate-800 antialiased">
-      {/* 1. Header (Government of Gujarat & ParivarSetu with Persona Switcher) */}
+      {/* 1. Header (Government of Gujarat & ParivarSetu) */}
       <Header 
         currentProfile={currentProfile}
         onProfileChange={handleProfileChange}
-        onOpenRegisterModal={() => setIsRegisterModalOpen(true)}
         onExitToLanding={handleExitToLanding}
+        onLogout={handleExitToLanding}
         unreadCount={notifications.filter(n => !n.read).length} 
       />
 
