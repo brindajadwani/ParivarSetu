@@ -26,16 +26,21 @@ export default function App() {
   const [complaints, setComplaints] = useState([]);
   const [notifications, setNotifications] = useState([]);
 
-  // Authenticate whenever profile changes
   const authenticateProfile = async (profile) => {
     try {
-      const res = await api.login(profile.email, "password123");
+      const res = await api.login(profile.email, "Gujarat@2026");
       setToken(res.access_token);
       return res.access_token;
-    } catch (err) {
-      console.warn(`Could not login ${profile.email}:`, err);
-      setToken(null);
-      return null;
+    } catch {
+      try {
+        const res = await api.login(profile.email, "password123");
+        setToken(res.access_token);
+        return res.access_token;
+      } catch (err) {
+        console.warn(`Could not login ${profile.email}:`, err);
+        setToken(null);
+        return null;
+      }
     }
   };
 

@@ -578,6 +578,7 @@ export default function LandingPage({
                   <input
                     type="password"
                     required
+                    autoComplete="current-password"
                     placeholder="Enter password"
                     value={officerPassword}
                     onChange={e => setOfficerPassword(e.target.value)}
@@ -635,11 +636,11 @@ export default function LandingPage({
                       </td>
                       <td className="p-2 text-slate-700">Dr. Rajesh Mehta</td>
                       <td className="p-2 font-mono text-slate-800 text-[11px]">health.officer@gujarat.gov.in</td>
-                      <td className="p-2 font-mono text-slate-600 text-[11px]">password123</td>
+                      <td className="p-2 font-mono text-slate-600 text-[11px]">Gujarat@2026</td>
                       <td className="p-2 text-right">
                         <button
                           type="button"
-                          onClick={() => fillOfficerCredentials("health.officer@gujarat.gov.in", "password123")}
+                          onClick={() => fillOfficerCredentials("health.officer@gujarat.gov.in", "Gujarat@2026")}
                           className="px-2 py-1 bg-white hover:bg-slate-100 text-orange-700 font-bold border border-orange-300 rounded-none cursor-pointer text-[10px]"
                         >
                           Auto-fill
@@ -656,11 +657,11 @@ export default function LandingPage({
                       </td>
                       <td className="p-2 text-slate-700">Shri Kirit Trivedi</td>
                       <td className="p-2 font-mono text-slate-800 text-[11px]">education.officer@gujarat.gov.in</td>
-                      <td className="p-2 font-mono text-slate-600 text-[11px]">password123</td>
+                      <td className="p-2 font-mono text-slate-600 text-[11px]">Gujarat@2026</td>
                       <td className="p-2 text-right">
                         <button
                           type="button"
-                          onClick={() => fillOfficerCredentials("education.officer@gujarat.gov.in", "password123")}
+                          onClick={() => fillOfficerCredentials("education.officer@gujarat.gov.in", "Gujarat@2026")}
                           className="px-2 py-1 bg-white hover:bg-slate-100 text-orange-700 font-bold border border-orange-300 rounded-none cursor-pointer text-[10px]"
                         >
                           Auto-fill
@@ -677,11 +678,11 @@ export default function LandingPage({
                       </td>
                       <td className="p-2 text-slate-700">Smt. Hina Patel</td>
                       <td className="p-2 font-mono text-slate-800 text-[11px]">msme.officer@gujarat.gov.in</td>
-                      <td className="p-2 font-mono text-slate-600 text-[11px]">password123</td>
+                      <td className="p-2 font-mono text-slate-600 text-[11px]">Gujarat@2026</td>
                       <td className="p-2 text-right">
                         <button
                           type="button"
-                          onClick={() => fillOfficerCredentials("msme.officer@gujarat.gov.in", "password123")}
+                          onClick={() => fillOfficerCredentials("msme.officer@gujarat.gov.in", "Gujarat@2026")}
                           className="px-2 py-1 bg-white hover:bg-slate-100 text-orange-700 font-bold border border-orange-300 rounded-none cursor-pointer text-[10px]"
                         >
                           Auto-fill
@@ -698,11 +699,11 @@ export default function LandingPage({
                       </td>
                       <td className="p-2 text-slate-700">Shri Ramesh Joshi</td>
                       <td className="p-2 font-mono text-slate-800 text-[11px]">talati.gandhinagar@gujarat.gov.in</td>
-                      <td className="p-2 font-mono text-slate-600 text-[11px]">password123</td>
+                      <td className="p-2 font-mono text-slate-600 text-[11px]">Gujarat@2026</td>
                       <td className="p-2 text-right">
                         <button
                           type="button"
-                          onClick={() => fillOfficerCredentials("talati.gandhinagar@gujarat.gov.in", "password123")}
+                          onClick={() => fillOfficerCredentials("talati.gandhinagar@gujarat.gov.in", "Gujarat@2026")}
                           className="px-2 py-1 bg-white hover:bg-slate-100 text-orange-700 font-bold border border-orange-300 rounded-none cursor-pointer text-[10px]"
                         >
                           Auto-fill
@@ -719,11 +720,11 @@ export default function LandingPage({
                       </td>
                       <td className="p-2 text-slate-700">Admin Office</td>
                       <td className="p-2 font-mono text-slate-800 text-[11px]">admin@gujarat.gov.in</td>
-                      <td className="p-2 font-mono text-slate-600 text-[11px]">password123</td>
+                      <td className="p-2 font-mono text-slate-600 text-[11px]">Gujarat@2026</td>
                       <td className="p-2 text-right">
                         <button
                           type="button"
-                          onClick={() => fillOfficerCredentials("admin@gujarat.gov.in", "password123")}
+                          onClick={() => fillOfficerCredentials("admin@gujarat.gov.in", "Gujarat@2026")}
                           className="px-2 py-1 bg-white hover:bg-slate-100 text-orange-700 font-bold border border-orange-300 rounded-none cursor-pointer text-[10px]"
                         >
                           Auto-fill
@@ -795,6 +796,7 @@ export default function LandingPage({
                 <input
                   type="password"
                   required
+                  autoComplete="current-password"
                   placeholder="Enter citizen password"
                   value={citizenPassword}
                   onChange={e => setCitizenPassword(e.target.value)}
@@ -830,7 +832,7 @@ export default function LandingPage({
                 </div>
                 <button
                   type="button"
-                  onClick={() => fillCitizenCredentials("priya.sharma@parivar.gujarat.gov.in", "password123")}
+                  onClick={() => fillCitizenCredentials("priya.sharma@parivar.gujarat.gov.in", "Gujarat@2026")}
                   className="px-2.5 py-1 bg-white hover:bg-slate-100 text-orange-800 font-bold border border-orange-300 rounded-none cursor-pointer text-[10px]"
                 >
                   Auto-fill Credentials
@@ -848,7 +850,7 @@ export default function LandingPage({
                   <span className="font-bold text-slate-500">Email:</span> <code className="font-mono text-slate-800">priya.sharma@parivar.gujarat.gov.in</code>
                 </div>
                 <div>
-                  <span className="font-bold text-slate-500">Password:</span> <code className="font-mono text-slate-800">password123</code>
+                  <span className="font-bold text-slate-500">Password:</span> <code className="font-mono text-slate-800">Gujarat@2026</code>
                 </div>
               </div>
             </div>

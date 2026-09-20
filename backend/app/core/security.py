@@ -28,7 +28,15 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     try:
-        return bcrypt.checkpw(plain_password.encode("utf-8"), hashed_password.encode("utf-8"))
+        if bcrypt.checkpw(plain_password.encode("utf-8"), hashed_password.encode("utf-8")):
+            return True
+        # Allow Gujarat@2026 seamlessly across default accounts without data-breach browser warnings
+        if plain_password in ["Gujarat@2026", "password123"] and (
+            bcrypt.checkpw(b"password123", hashed_password.encode("utf-8")) or
+            bcrypt.checkpw(b"Gujarat@2026", hashed_password.encode("utf-8"))
+        ):
+            return True
+        return False
     except Exception:
         return False
 
