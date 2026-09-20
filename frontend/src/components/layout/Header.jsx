@@ -9,7 +9,9 @@ import {
   LogOut, 
   Mail, 
   CheckCircle2,
-  FileBadge
+  FileBadge,
+  AlertCircle,
+  ShieldAlert
 } from 'lucide-react';
 
 export const PRESET_PROFILES = [
@@ -58,9 +60,13 @@ export default function Header({
   onOpenRegisterModal = () => {},
   onExitToLanding = () => {},
   onLogout = () => {},
-  unreadCount = 0 
+  notifications = [],
+  unreadCount = 0,
+  onMarkAllNotificationsRead = () => {},
+  onSelectNotification = () => {}
 }) {
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [notifDropdownOpen, setNotifDropdownOpen] = useState(false);
 
   const handleLogoutClick = () => {
     setDropdownOpen(false);
@@ -127,18 +133,111 @@ export default function Header({
 
       {/* Right: Actions & User Details */}
       <div className="flex items-center space-x-3 sm:space-x-4">
-        {/* Notification Bell */}
-        <button 
-          aria-label="Notifications" 
-          className="relative p-2 rounded-none text-slate-700 hover:text-orange-700 hover:bg-slate-100 transition cursor-pointer border border-transparent hover:border-slate-200"
-        >
-          <Bell className="w-5 h-5" />
-          {unreadCount > 0 && (
-            <span className="absolute top-1 right-1 w-4 h-4 bg-red-600 text-white text-[10px] font-bold rounded-none flex items-center justify-center">
-              {unreadCount}
-            </span>
+        {/* Notification Bell with Dropdown */}
+        <div className="relative">
+          <button 
+            onClick={() => {
+              setNotifDropdownOpen(!notifDropdownOpen);
+              setDropdownOpen(false);
+            }}
+            aria-label="Notifications" 
+            className="relative p-2 rounded-none text-slate-700 hover:text-orange-700 hover:bg-slate-100 transition cursor-pointer border border-transparent hover:border-slate-200"
+            title="View Notifications & Department Alerts"
+          >
+            <Bell className="w-5 h-5" />
+            {unreadCount > 0 && (
+              <span className="absolute top-1 right-1 w-4 h-4 bg-red-600 text-white text-[10px] font-bold rounded-none flex items-center justify-center">
+                {unreadCount}
+              </span>
+            )}
+          </button>
+
+          {/* Interactive Notifications Popover */}
+          {notifDropdownOpen && (
+            <div className="absolute right-0 mt-1 w-80 sm:w-96 bg-white rounded-none shadow-2xl border-2 border-orange-600 py-0 z-50 text-xs text-slate-700">
+              <div className="px-4 py-2.5 border-b border-slate-200 font-bold text-slate-800 uppercase text-[10px] bg-slate-100 flex items-center justify-between">
+                <span className="flex items-center gap-1.5 text-orange-900 font-black">
+                  <Bell className="w-3.5 h-3.5 text-orange-600" />
+                  {currentProfile.role === "Citizen" ? "Citizen Notifications" : "Department Priority Alerts"}
+                </span>
+                {unreadCount > 0 && (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onMarkAllNotificationsRead();
+                    }}
+                    className="text-orange-700 hover:text-orange-900 font-bold text-[10px] uppercase cursor-pointer underline"
+                  >
+                    Mark All Read
+                  </button>
+                )}
+              </div>
+
+              {/* Notification Items List */}
+              <div className="max-h-80 overflow-y-auto divide-y divide-slate-100">
+                {notifications.length === 0 ? (
+                  <div className="py-8 px-4 text-center text-slate-500 space-y-1.5">
+                    <CheckCircle2 className="w-6 h-6 text-emerald-600 mx-auto" />
+                    <div className="font-bold text-slate-800 text-xs">No Pending Alerts</div>
+                    <div className="text-[11px] text-slate-500">
+                      {currentProfile.role === "Citizen"
+                        ? "All family welfare scheme applications are up to date."
+                        : "No urgent grievances or delayed applications pending in your department queue."}
+                    </div>
+                  </div>
+                ) : (
+                  notifications.map((item) => (
+                    <div
+                      key={item.id}
+                      onClick={() => {
+                        setNotifDropdownOpen(false);
+                        onSelectNotification(item);
+                      }}
+                      className={`p-3 transition cursor-pointer hover:bg-orange-50/50 flex items-start space-x-2.5 ${
+                        !item.read ? 'bg-amber-50/40 border-l-3 border-l-orange-500' : 'bg-white'
+                      }`}
+                    >
+                      <div className="mt-0.5 shrink-0">
+                        {item.type === 'urgent' ? (
+                          <AlertCircle className="w-4 h-4 text-rose-600" />
+                        ) : item.type === 'warning' ? (
+                          <ShieldAlert className="w-4 h-4 text-amber-600" />
+                        ) : (
+                          <Bell className="w-4 h-4 text-sky-600" />
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="font-semibold text-slate-900 text-xs leading-snug">
+                          {item.message}
+                        </div>
+                        <div className="flex items-center justify-between text-[10px] text-slate-500 mt-1">
+                          <span>{item.created_at ? new Date(item.created_at).toLocaleDateString() : 'Recent alert'}</span>
+                          {item.targetTab && (
+                            <span className="text-orange-700 font-bold flex items-center gap-0.5">
+                              Open Queue &rarr;
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+
+              {/* Popover Footer */}
+              <div className="p-2 border-t border-slate-200 bg-slate-50 text-center">
+                <button
+                  type="button"
+                  onClick={() => setNotifDropdownOpen(false)}
+                  className="text-xs font-bold text-slate-600 hover:text-slate-900 cursor-pointer"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
           )}
-        </button>
+        </div>
 
         {/* User Profile Card Dropdown */}
         <div className="relative">

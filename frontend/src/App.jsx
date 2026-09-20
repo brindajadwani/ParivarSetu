@@ -63,10 +63,82 @@ export default function App() {
         setEligibleSchemeIds(Array.isArray(elg) ? elg.map(s => s.id) : []);
         setComplaints(Array.isArray(comps) ? comps : []);
         setNotifications(Array.isArray(notifs) ? notifs : []);
+      } else if (profile.role === "Officer") {
+        setApplications([]);
+        setEligibleSchemeIds([]);
+        setComplaints([]);
+        try {
+          const [deptComplaints, delayedApps] = await Promise.all([
+            api.listComplaints({ dept_id: profile.dept_id, status: 'Open' }, activeTok).catch(() => []),
+            api.getDelayedApplications(activeTok).catch(() => [])
+          ]);
+          
+          const officerAlerts = [];
+          if (Array.isArray(deptComplaints)) {
+            deptComplaints.forEach(c => {
+              officerAlerts.push({
+                id: `comp-${c.id}`,
+                message: `Grievance #${c.id} on ${c.scheme_name || 'Scheme Application'} requires officer review.`,
+                targetTab: 'officer-complaints',
+                read: false,
+                created_at: c.created_at,
+                type: 'urgent'
+              });
+            });
+          }
+          if (Array.isArray(delayedApps)) {
+            const deptDelayed = delayedApps.filter(d => !profile.dept_id || d.scheme_id === profile.dept_id || d.dept_id === profile.dept_id);
+            deptDelayed.forEach(d => {
+              officerAlerts.push({
+                id: `del-${d.application_id || d.id}`,
+                message: `Application #${d.application_id || d.id} (${d.scheme_name || 'Scheme'}) pending review > 3 days.`,
+                targetTab: 'officer-apps',
+                read: false,
+                created_at: d.applied_on,
+                type: 'warning'
+              });
+            });
+          }
+          setNotifications(officerAlerts);
+        } catch {
+          setNotifications([]);
+        }
+      } else if (profile.role === "Verifier") {
+        setApplications([]);
+        setEligibleSchemeIds([]);
+        setComplaints([]);
+        try {
+          const provFamilies = await api.listFamilies('provisional').catch(() => []);
+          const verifierAlerts = [];
+          if (Array.isArray(provFamilies) && provFamilies.length > 0) {
+            verifierAlerts.push({
+              id: 'ver-prov',
+              message: `${provFamilies.length} provisional families pending field document verification.`,
+              targetTab: 'verifier-queue',
+              read: false,
+              type: 'info'
+            });
+          }
+          setNotifications(verifierAlerts);
+        } catch {
+          setNotifications([]);
+        }
       }
     } catch (err) {
       console.error("Data load error:", err);
     }
+  };
+
+  const handleSelectNotification = (notif) => {
+    if (notif.targetTab) {
+      setActiveTab(notif.targetTab);
+    } else if (currentProfile.role === "Citizen") {
+      setActiveTab("my-applications");
+    }
+  };
+
+  const handleMarkAllNotificationsRead = () => {
+    setNotifications(prev => prev.map(n => ({ ...n, read: true })));
   };
 
   useEffect(() => {
@@ -150,8 +222,10 @@ export default function App() {
         currentProfile={currentProfile}
         onProfileChange={handleProfileChange}
         onExitToLanding={handleExitToLanding}
-        onLogout={handleExitToLanding}
+        notifications={notifications}
         unreadCount={notifications.filter(n => !n.read).length} 
+        onMarkAllNotificationsRead={handleMarkAllNotificationsRead}
+        onSelectNotification={handleSelectNotification}
       />
 
       {/* 2. Main Body with Sidebar + Dynamic View */}
