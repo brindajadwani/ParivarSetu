@@ -103,10 +103,13 @@ def create_notification(family_id: str, scheme_id: int, message: str, db: Sessio
         db.rollback()
         return None
 
-def flag_delayed_applications(db: Session, days: int = 3) -> List[Application]:
+def flag_delayed_applications(db: Session, dept_id: Optional[int] = None, days: int = 3) -> List[Application]:
     """Flag applications stuck in 'Applied' or 'Under Review' for more than specified days."""
     cutoff = datetime.utcnow() - timedelta(days=days)
-    return db.query(Application).filter(
+    q = db.query(Application).join(Scheme, Application.scheme_id == Scheme.id).filter(
         Application.status.in_(["Applied", "Under Review"]),
         Application.updated_at < cutoff
-    ).all()
+    )
+    if dept_id is not None:
+        q = q.filter(Scheme.dept_id == dept_id)
+    return q.all()

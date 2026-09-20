@@ -12,6 +12,8 @@ class ComplaintResolve(BaseModel):
 class ComplaintResponse(BaseModel):
     id: int
     application_id: int
+    family_id: Optional[str] = None
+    scheme_name: Optional[str] = None
     message: str
     status: str
     officer_response: Optional[str] = None
