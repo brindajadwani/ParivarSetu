@@ -68,6 +68,16 @@ export default function FamilyDetailsCard({
           {memberCount}
         </div>
       </div>
+
+      <div className="mt-4 pt-3 border-t border-slate-100 flex justify-between items-center">
+        <span className="text-[11px] text-slate-500 font-medium">All members Aadhaar-verified</span>
+        <button
+          onClick={onViewProfile}
+          className="text-xs font-bold text-orange-700 hover:text-orange-900 cursor-pointer flex items-center gap-1"
+        >
+          View Full Family Roster &rarr;
+        </button>
+      </div>
     </div>
   );
 }

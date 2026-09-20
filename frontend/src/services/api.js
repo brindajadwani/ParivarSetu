@@ -57,6 +57,66 @@ export const api = {
     return res.json();
   },
 
+  async addFamilyMember(familyId, memberData, token = null) {
+    const headers = { 'Content-Type': 'application/json' };
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+    const res = await fetch(`${API_BASE}/families/${familyId}/members`, {
+      method: 'PUT',
+      headers,
+      body: JSON.stringify(memberData)
+    });
+    if (!res.ok) throw new Error((await res.json()).detail || 'Failed to add member');
+    return res.json();
+  },
+
+  async updateBankInfo(familyId, bankData, token = null) {
+    const headers = { 'Content-Type': 'application/json' };
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+    const res = await fetch(`${API_BASE}/families/${familyId}/bank`, {
+      method: 'PUT',
+      headers,
+      body: JSON.stringify(bankData)
+    });
+    if (!res.ok) throw new Error((await res.json()).detail || 'Failed to update bank details');
+    return res.json();
+  },
+
+  async updateHealthInfo(familyId, healthData, token = null) {
+    const headers = { 'Content-Type': 'application/json' };
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+    const res = await fetch(`${API_BASE}/families/${familyId}/health`, {
+      method: 'PUT',
+      headers,
+      body: JSON.stringify(healthData)
+    });
+    if (!res.ok) throw new Error((await res.json()).detail || 'Failed to update health info');
+    return res.json();
+  },
+
+  async updateEducationInfo(familyId, eduData, token = null) {
+    const headers = { 'Content-Type': 'application/json' };
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+    const res = await fetch(`${API_BASE}/families/${familyId}/education`, {
+      method: 'PUT',
+      headers,
+      body: JSON.stringify(eduData)
+    });
+    if (!res.ok) throw new Error((await res.json()).detail || 'Failed to update education info');
+    return res.json();
+  },
+
+  async updateBusinessInfo(familyId, bizData, token = null) {
+    const headers = { 'Content-Type': 'application/json' };
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+    const res = await fetch(`${API_BASE}/families/${familyId}/business`, {
+      method: 'PUT',
+      headers,
+      body: JSON.stringify(bizData)
+    });
+    if (!res.ok) throw new Error((await res.json()).detail || 'Failed to update business info');
+    return res.json();
+  },
+
   // Schemes
   async listSchemes(token = null) {
     const headers = token ? { Authorization: `Bearer ${token}` } : {};

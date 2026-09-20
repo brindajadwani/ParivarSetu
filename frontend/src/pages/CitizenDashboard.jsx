@@ -7,15 +7,18 @@ import ActiveSchemesCard from '../components/dashboard/ActiveSchemesCard';
 import QuickActionsCard from '../components/dashboard/QuickActionsCard';
 import NotificationsCard from '../components/dashboard/NotificationsCard';
 
-export default function CitizenDashboard() {
+export default function CitizenDashboard({ 
+  currentFamilyId = "GJ12345678", 
+  onNavigate = () => {} 
+}) {
   const [loading, setLoading] = useState(false);
   const [familyData, setFamilyData] = useState(null);
 
   useEffect(() => {
-    // Attempt fetching live data from FastAPI backend if running, fallback seamlessly to Gujarat seeds
+    // Fetch live family data for current family ID
     const fetchData = async () => {
       try {
-        const res = await fetch('/api/v1/families/GJ12345678');
+        const res = await fetch(`/api/v1/families/${currentFamilyId}`);
         if (res.ok) {
           const data = await res.json();
           setFamilyData(data);
@@ -25,16 +28,16 @@ export default function CitizenDashboard() {
       }
     };
     fetchData();
-  }, []);
+  }, [currentFamilyId]);
 
   return (
     <div className="space-y-6 pb-12">
       {/* 1. Welcome Banner */}
-      <WelcomeBanner userName="Priya Sharma" />
+      <WelcomeBanner userName={familyData?.head_name || "Priya Sharma"} />
 
       {/* 2. Key Stats Row */}
       <StatCards 
-        familyId={familyData?.family_id || "GJ12345678"}
+        familyId={familyData?.family_id || currentFamilyId}
         status={familyData?.status === "permanent" ? "Active" : "Active"}
         totalSchemes={5}
         applicationsCount={3}
@@ -49,11 +52,12 @@ export default function CitizenDashboard() {
         <div className="lg:col-span-7 space-y-6">
           {/* Family Details Card */}
           <FamilyDetailsCard 
-            familyName="Sharma Family"
-            familyId={familyData?.family_id || "GJ12345678"}
+            familyName={`${familyData?.head_name || "Sharma"} Family`}
+            familyId={familyData?.family_id || currentFamilyId}
             district={familyData?.district || "Gandhinagar"}
             ward="Sector 6 / Gandhinagar"
             memberCount={familyData?.members?.length || 4}
+            onViewProfile={() => onNavigate('my-family')}
           />
 
           {/* Application Status Card */}

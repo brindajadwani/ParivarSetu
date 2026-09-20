@@ -6,6 +6,7 @@ import ApplicationTracker from './components/citizen/ApplicationTracker';
 import SchemeCatalog from './components/citizen/SchemeCatalog';
 import GrievanceForm from './components/citizen/GrievanceForm';
 import FamilyRegistrationModal from './components/citizen/FamilyRegistrationModal';
+import MyFamilyPortal from './components/citizen/MyFamilyPortal';
 import OfficerPortal from './pages/OfficerPortal';
 import VerifierPortal from './pages/VerifierPortal';
 import { api } from './services/api';
@@ -121,7 +122,12 @@ export default function App() {
           {/* === CITIZEN VIEWS === */}
           {currentProfile.role === "Citizen" && (
             <>
-              {activeTab === 'dashboard' && <CitizenDashboard />}
+              {activeTab === 'dashboard' && (
+                <CitizenDashboard 
+                  currentFamilyId={currentProfile.family_id} 
+                  onNavigate={setActiveTab} 
+                />
+              )}
               
               {activeTab === 'my-applications' && (
                 <ApplicationTracker 
@@ -177,7 +183,12 @@ export default function App() {
                 </div>
               )}
 
-              {activeTab === 'my-family' && <CitizenDashboard />}
+              {activeTab === 'my-family' && (
+                <MyFamilyPortal 
+                  familyId={currentProfile.family_id} 
+                  token={token} 
+                />
+              )}
             </>
           )}
 
