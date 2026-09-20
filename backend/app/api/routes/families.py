@@ -135,10 +135,27 @@ def register_family(
     return family
 
 @router.get("/{family_id}", response_model=FamilyResponse)
-def get_family(family_id: str, db: Session = Depends(get_db)):
+def get_family(
+    family_id: str, 
+    user_payload: TokenPayload = Depends(get_current_user_payload),
+    db: Session = Depends(get_db)
+):
     family = db.query(Family).filter(Family.family_id == family_id).first()
     if not family:
         raise HTTPException(status_code=404, detail="Family not found")
+
+    # Blind Review Policy: Anonymize personal identifying names for review officers to eliminate bias
+    if user_payload.role == "officer":
+        resp = FamilyResponse.model_validate(family)
+        resp.head_name = f"Applicant Household ({family.family_id})"
+        anonymized_members = []
+        for idx, m in enumerate(resp.members, 1):
+            m.name = f"Member #{idx} ({m.relation.capitalize()})"
+            anonymized_members.append(m)
+        resp.members = anonymized_members
+        if resp.bank_info:
+            resp.bank_info.account_holder = f"Beneficiary #{family.family_id}"
+        return resp
     return family
 
 @router.get("", response_model=List[FamilyResponse])

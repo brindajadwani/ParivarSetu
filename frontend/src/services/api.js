@@ -36,8 +36,9 @@ export const api = {
     return res.json();
   },
 
-  async getFamily(familyId) {
-    const res = await fetch(`${API_BASE}/families/${familyId}`);
+  async getFamily(familyId, token = null) {
+    const headers = token ? { Authorization: `Bearer ${token}` } : {};
+    const res = await fetch(`${API_BASE}/families/${familyId}`, { headers });
     if (!res.ok) throw new Error('Family not found');
     return res.json();
   },

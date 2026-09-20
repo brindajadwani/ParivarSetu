@@ -199,9 +199,30 @@ def deactivate_scheme(
     return {"status": "success", "message": f"Scheme '{scheme.name}' has been deactivated"}
 
 @router.get("/{scheme_id}/eligible-families", response_model=List[FamilyResponse])
-def eligible_families_endpoint(scheme_id: int, db: Session = Depends(get_db)):
-    """Runs the generic data-driven eligibility engine for this scheme."""
+def eligible_families_endpoint(
+    scheme_id: int, 
+    user_payload: TokenPayload = Depends(get_current_user_payload),
+    db: Session = Depends(get_db)
+):
+    """
+    Runs the generic data-driven eligibility engine for this scheme.
+    Enforces Blind Review Policy: Anonymizes personal names for review officers to eliminate bias.
+    """
     families = get_eligible_families(scheme_id, db)
+    if user_payload.role == "officer":
+        results = []
+        for f in families:
+            resp = FamilyResponse.model_validate(f)
+            resp.head_name = f"Applicant Household ({f.family_id})"
+            anonymized_members = []
+            for idx, m in enumerate(resp.members, 1):
+                m.name = f"Member #{idx} ({m.relation.capitalize()})"
+                anonymized_members.append(m)
+            resp.members = anonymized_members
+            if resp.bank_info:
+                resp.bank_info.account_holder = f"Beneficiary #{f.family_id}"
+            results.append(resp)
+        return results
     return families
 
 @router.post("/{scheme_id}/notify-eligible")
