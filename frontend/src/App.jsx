@@ -169,6 +169,11 @@ export default function App() {
     setViewMode('landing');
   };
 
+  const handleLogout = () => {
+    setToken(null);
+    setViewMode('landing');
+  };
+
   const handleApplyToScheme = async (schemeId) => {
     try {
       await api.applyToScheme(currentProfile.family_id, schemeId);
@@ -221,7 +226,8 @@ export default function App() {
       <Header 
         currentProfile={currentProfile}
         onProfileChange={handleProfileChange}
-        onExitToLanding={handleExitToLanding}
+        onLogout={handleLogout}
+        onExitToLanding={handleLogout}
         notifications={notifications}
         unreadCount={notifications.filter(n => !n.read).length} 
         onMarkAllNotificationsRead={handleMarkAllNotificationsRead}

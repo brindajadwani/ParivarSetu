@@ -68,11 +68,14 @@ export default function Header({
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [notifDropdownOpen, setNotifDropdownOpen] = useState(false);
 
-  const handleLogoutClick = () => {
+  const handleLogoutClick = (e) => {
+    if (e && e.preventDefault) e.preventDefault();
     setDropdownOpen(false);
-    if (onLogout) {
+    setNotifDropdownOpen(false);
+    if (typeof onLogout === 'function') {
       onLogout();
-    } else if (onExitToLanding) {
+    }
+    if (typeof onExitToLanding === 'function') {
       onExitToLanding();
     }
   };
