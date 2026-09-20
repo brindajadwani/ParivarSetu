@@ -9,9 +9,11 @@ import FamilyRegistrationModal from './components/citizen/FamilyRegistrationModa
 import MyFamilyPortal from './components/citizen/MyFamilyPortal';
 import OfficerPortal from './pages/OfficerPortal';
 import VerifierPortal from './pages/VerifierPortal';
+import LandingPage from './pages/LandingPage';
 import { api } from './services/api';
 
 export default function App() {
+  const [viewMode, setViewMode] = useState('landing'); // 'landing' | 'portal'
   const [currentProfile, setCurrentProfile] = useState(PRESET_PROFILES[0]);
   const [token, setToken] = useState(null);
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -80,6 +82,15 @@ export default function App() {
     }
   };
 
+  const handleSelectProfileFromLanding = (profile) => {
+    handleProfileChange(profile);
+    setViewMode('portal');
+  };
+
+  const handleExitToLanding = () => {
+    setViewMode('landing');
+  };
+
   const handleApplyToScheme = async (schemeId) => {
     try {
       await api.applyToScheme(currentProfile.family_id, schemeId);
@@ -98,6 +109,33 @@ export default function App() {
 
   const appliedSchemeIds = applications.map(a => a.scheme_id);
 
+  // If in Public Landing Page Mode
+  if (viewMode === 'landing') {
+    return (
+      <>
+        <LandingPage 
+          onSelectProfile={handleSelectProfileFromLanding}
+          onOpenRegisterModal={() => setIsRegisterModalOpen(true)}
+        />
+        <FamilyRegistrationModal 
+          isOpen={isRegisterModalOpen}
+          onClose={() => setIsRegisterModalOpen(false)}
+          onRegistered={(newFam) => {
+            setIsRegisterModalOpen(false);
+            const newProfile = {
+              id: "citizen",
+              name: newFam.head_name,
+              role: "Citizen",
+              email: "citizen@parivar.gujarat.gov.in",
+              family_id: newFam.family_id
+            };
+            handleSelectProfileFromLanding(newProfile);
+          }}
+        />
+      </>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col font-sans text-slate-800 antialiased">
       {/* 1. Header (Government of Gujarat & ParivarSetu with Persona Switcher) */}
@@ -105,6 +143,7 @@ export default function App() {
         currentProfile={currentProfile}
         onProfileChange={handleProfileChange}
         onOpenRegisterModal={() => setIsRegisterModalOpen(true)}
+        onExitToLanding={handleExitToLanding}
         unreadCount={notifications.filter(n => !n.read).length} 
       />
 

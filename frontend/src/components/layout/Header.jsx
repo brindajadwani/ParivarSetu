@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Bell, ChevronDown, User, ShieldCheck, Plus, Building2, UserCheck } from 'lucide-react';
+import { Bell, ChevronDown, User, ShieldCheck, Plus, Building2, UserCheck, Home } from 'lucide-react';
 
 export const PRESET_PROFILES = [
   {
@@ -45,6 +45,7 @@ export default function Header({
   currentProfile = PRESET_PROFILES[0], 
   onProfileChange = () => {}, 
   onOpenRegisterModal = () => {},
+  onExitToLanding = () => {},
   unreadCount = 3 
 }) {
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -127,6 +128,16 @@ export default function Header({
           )}
         </button>
 
+        {/* Return to Public Landing Page Button */}
+        <button
+          onClick={onExitToLanding}
+          className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold border border-slate-300 rounded-none cursor-pointer transition shadow-xs"
+          title="Return to Public Landing Page"
+        >
+          <Home className="w-3.5 h-3.5 text-slate-600" />
+          <span className="hidden md:inline">Portal Home</span>
+        </button>
+
         {/* Role Switcher & Profile Card */}
         <div className="relative">
           <button 
@@ -184,7 +195,7 @@ export default function Header({
                 );
               })}
 
-              <div className="border-t border-slate-200 mt-1 p-2">
+              <div className="border-t border-slate-200 mt-1 p-2 space-y-1.5">
                 <button 
                   onClick={() => {
                     onOpenRegisterModal();
@@ -193,6 +204,16 @@ export default function Header({
                   className="w-full text-center py-1 text-xs font-bold text-amber-800 bg-amber-50 hover:bg-amber-100 border border-amber-300 cursor-pointer"
                 >
                   + Enroll New Family
+                </button>
+                <button 
+                  onClick={() => {
+                    onExitToLanding();
+                    setDropdownOpen(false);
+                  }}
+                  className="w-full text-center py-1 text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-300 cursor-pointer flex items-center justify-center gap-1"
+                >
+                  <Home className="w-3.5 h-3.5" />
+                  Return to Public Landing Page
                 </button>
               </div>
             </div>
