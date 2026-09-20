@@ -73,6 +73,15 @@ def register_family(
     elif req.ration_card_no:
         pds_record = lookup_mock_pds_aadhaar(req.ration_card_no)
 
+    target_rc = pds_record["ration_card_no"] if pds_record else req.ration_card_no
+    if target_rc:
+        existing_rc = db.query(Family).filter(Family.ration_card_no == target_rc).first()
+        if existing_rc:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Family with Ration Card '{target_rc}' is already registered with Family ID: {existing_rc.family_id}"
+            )
+
     family_id = generate_family_id(db, prefix="GJ")
     
     # Priority to verified registry data or submitted data

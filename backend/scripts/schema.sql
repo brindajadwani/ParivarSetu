@@ -172,6 +172,7 @@ CREATE INDEX idx_families_business_tags ON families USING GIN(business_tags);
 CREATE INDEX idx_applications_status ON applications(status);
 CREATE INDEX idx_applications_scheme ON applications(scheme_id);
 CREATE INDEX idx_applications_family ON applications(family_id);
+CREATE UNIQUE INDEX IF NOT EXISTS uq_app_family_scheme_null_member ON applications (family_id, scheme_id) WHERE member_id IS NULL;
 
 -- ===== INITIAL SEED FOR DEPARTMENTS =====
 INSERT INTO departments (name) VALUES 
