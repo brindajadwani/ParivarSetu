@@ -20,24 +20,201 @@ ParivarSetu is a full-stack e-governance platform built for the **Government of 
 
 ---
 
-## 📑 Table of Contents
+## 🗄️ Database Schema, Indexes & Constraints
 
-| # | Section | Description |
-|---|---|---|
-| 1 | [📐 System Architecture](#-system-architecture) | High-level architecture diagram & data flow |
-| 2 | [🔐 Security Architecture](#-security-architecture) | JWT, bcrypt, RBAC, dept isolation, OWASP headers |
-| 3 | [🛡️ Blind Adjudication](#️-blind-adjudication-anti-bias-de-identification) | Anti-bias de-identification for officers |
-| 4 | [🧠 Generic Eligibility Engine](#-generic-eligibility-engine-auto-schema-matching) | Auto schema matching across departments |
-| 5 | [🏛️ Roles & Capabilities](#️-role-based-access--capabilities) | Citizen, Officer, Verifier, Admin |
-| 6 | [📊 Admin Analytics](#-executive-intelligence-command-centre-admin-analytics) | Executive Intelligence Command Centre |
-| 7 | [🔍 Transparency & Accountability](#-transparency--accountability) | Audit trail, DBT traceability, SLA enforcement |
-| 8 | [🏛️ Demo Credentials](#️-system-actors--demo-credentials) | All 6 personas with login details |
-| 9 | [🚀 Quick Start Guide](#-quick-start-guide) | Setup instructions for backend & frontend |
-| 10 | [🎯 Live Demo Script](#-live-demonstration-script-7-steps) | 7-step walkthrough for presentations |
-| 11 | [🧪 Test Suite](#-automated-test-suite) | 21 automated tests across 4 modules |
-| 12 | [💻 Tech Stack](#-tech-stack) | React, FastAPI, PostgreSQL, Tailwind CSS |
-| 13 | [📁 Project Structure](#-project-structure) | Complete directory tree |
-| 14 | [🔑 Key Differentiators](#-key-differentiators) | ParivarSetu vs traditional systems |
+ParivarSetu uses **PostgreSQL 18** with carefully designed indexes, unique constraints, and ARRAY columns with GIN indexing for fast eligibility matching.
+
+### Entity-Relationship Diagram
+
+```mermaid
+erDiagram
+    USERS ||--o{ AUDIT_LOGS : "creates"
+    USERS }o--|| DEPARTMENTS : "belongs_to"
+    USERS }o--|| FAMILIES : "linked_to"
+    DEPARTMENTS ||--o{ SCHEMES : "owns"
+    FAMILIES ||--o{ FAMILY_MEMBERS : "has"
+    FAMILIES ||--|| BANK_INFO : "has"
+    FAMILIES ||--o{ HEALTH_INFO : "has"
+    FAMILIES ||--o{ EDUCATION_INFO : "has"
+    FAMILIES ||--o{ BUSINESS_INFO : "has"
+    FAMILIES ||--o{ APPLICATIONS : "files"
+    FAMILIES ||--o{ NOTIFICATIONS : "receives"
+    SCHEMES ||--o{ APPLICATIONS : "receives"
+    SCHEMES ||--o{ NOTIFICATIONS : "generates"
+    APPLICATIONS ||--o{ COMPLAINTS : "has"
+    FAMILY_MEMBERS ||--o{ HEALTH_INFO : "has"
+    FAMILY_MEMBERS ||--o{ EDUCATION_INFO : "has"
+    FAMILY_MEMBERS ||--o{ BUSINESS_INFO : "has"
+
+    FAMILIES {
+        string family_id PK "GJ-XXXXXXXX"
+        string head_name "NOT NULL"
+        numeric income "NOT NULL, 12-2 precision"
+        string category "BPL/SC/ST/OBC/General"
+        string district "Gandhinagar, Ahmedabad..."
+        string ration_card_no UK "UNIQUE constraint"
+        string aadhaar_ref_masked "XXXX-XXXX-1234"
+        string status "provisional/permanent/rejected"
+        string_array health_tags "GIN indexed — cardiac, diabetes..."
+        string_array education_tags "GIN indexed"
+        string_array business_tags "GIN indexed"
+        datetime created_at "auto"
+        datetime updated_at "auto on update"
+    }
+
+    FAMILY_MEMBERS {
+        int id PK "auto-increment"
+        string family_id FK "CASCADE on delete"
+        string name "member name"
+        int age "age"
+        string gender "M/F"
+        string relation "head/spouse/child/parent"
+        string occupation "occupation"
+    }
+
+    SCHEMES {
+        int id PK "auto-increment"
+        int dept_id FK "department reference"
+        string name "NOT NULL"
+        text description "scheme details"
+        numeric min_income "eligibility rule"
+        numeric max_income "eligibility rule"
+        string category "BPL/SC/ST..."
+        string required_condition_tag "health rule — GIN lookup"
+        string required_class "education rule"
+        float min_percentage "education rule"
+        string business_category "MSME rule"
+        int min_business_age "months"
+        numeric benefit_amount "disbursal amount"
+        boolean active "true/false"
+    }
+
+    APPLICATIONS {
+        int id PK "auto-increment"
+        string family_id FK "family reference"
+        int member_id FK "nullable"
+        int scheme_id FK "scheme reference"
+        string status "Applied/Under Review/Approved/Disbursed/Rejected/Escalated"
+        numeric disbursed_amount "DBT amount"
+        string txn_id "DBT-GJ-XXXXX"
+        datetime applied_on "application date"
+        datetime updated_at "auto on update"
+    }
+
+    USERS {
+        int id PK "auto-increment"
+        string email UK "UNIQUE, NOT NULL"
+        string password_hash "bcrypt hashed"
+        string role "citizen/officer/verifier/admin"
+        int dept_id FK "nullable — officers only"
+        string family_id FK "nullable — citizens only"
+    }
+
+    DEPARTMENTS {
+        int id PK "auto-increment"
+        string name UK "UNIQUE, NOT NULL"
+    }
+
+    BANK_INFO {
+        int id PK "auto-increment"
+        string family_id FK-UK "UNIQUE, CASCADE on delete"
+        string account_number_masked "****4321"
+        string ifsc "SBIN0001234"
+        string bank_name "State Bank of India"
+        string account_holder "holder name"
+    }
+
+    HEALTH_INFO {
+        int id PK "auto-increment"
+        string family_id FK "CASCADE on delete"
+        int member_id FK "CASCADE on delete"
+        string_array condition_tags "GIN — pregnant, diabetic, disability"
+        boolean bpl_health_card "true/false"
+    }
+
+    EDUCATION_INFO {
+        int id PK "auto-increment"
+        string family_id FK "CASCADE on delete"
+        int member_id FK "CASCADE on delete"
+        string current_class "12th, Graduate..."
+        string school_or_college "institution name"
+        float last_percentage "merit percentage"
+        string enrollment_status "enrolled/dropped"
+    }
+
+    BUSINESS_INFO {
+        int id PK "auto-increment"
+        string family_id FK "CASCADE on delete"
+        int member_id FK "CASCADE on delete"
+        string business_name "business name"
+        string business_type "startup/MSME/small_business"
+        string registration_status "registered/unregistered"
+        int business_age_months "age in months"
+        numeric annual_turnover "12-2 precision"
+    }
+
+    COMPLAINTS {
+        int id PK "auto-increment"
+        int application_id FK "application reference"
+        text message "NOT NULL"
+        string status "Open/Resolved"
+        text officer_response "resolution remark"
+        datetime created_at "auto"
+        datetime resolved_at "resolution timestamp"
+    }
+
+    NOTIFICATIONS {
+        int id PK "auto-increment"
+        string family_id FK "family reference"
+        int scheme_id FK "scheme reference"
+        text message "NOT NULL"
+        boolean read "true/false"
+        datetime created_at "auto"
+    }
+
+    AUDIT_LOGS {
+        int id PK "auto-increment"
+        int user_id FK "who performed action"
+        string action "approve/reject/disburse/verify"
+        string entity "application/family/complaint"
+        string entity_id "reference ID"
+        datetime timestamp "auto — immutable"
+    }
+```
+
+### Indexes & Constraints for Fast Queries
+
+| Table | Index / Constraint | Type | Purpose |
+|---|---|---|---|
+| `families` | `family_id` | **Primary Key** | O(1) lookup by Family ID `GJ-XXXXXXXX` |
+| `families` | `ration_card_no` | **Unique** | Prevents duplicate ration card registrations |
+| `families` | `health_tags` | **PostgreSQL ARRAY + GIN** | O(1) `ANY()` health condition matching for eligibility engine |
+| `families` | `education_tags` | **PostgreSQL ARRAY + GIN** | Fast education tag filtering |
+| `families` | `business_tags` | **PostgreSQL ARRAY + GIN** | Fast business tag filtering |
+| `users` | `email` | **Unique** | Prevents duplicate user accounts, fast login lookup |
+| `departments` | `name` | **Unique** | Prevents duplicate departments |
+| `applications` | `(family_id, member_id, scheme_id)` | **Unique Composite** | Prevents same family member from applying to the same scheme twice |
+| `notifications` | `(family_id, scheme_id)` | **Unique Composite** | Prevents duplicate eligibility notifications per family per scheme |
+| `bank_info` | `family_id` | **Unique FK** | One-to-one: each family has exactly one bank account |
+| `applications` | `family_id` FK | **Foreign Key** | Fast join from families → applications |
+| `applications` | `scheme_id` FK | **Foreign Key** | Fast join from schemes → applications |
+| `family_members` | `family_id` FK | **Foreign Key + CASCADE** | Auto-delete members when family is removed |
+| `health_info` | `family_id` FK | **Foreign Key + CASCADE** | Auto-delete health records on family removal |
+| `education_info` | `family_id` FK | **Foreign Key + CASCADE** | Auto-delete education records on family removal |
+| `business_info` | `family_id` FK | **Foreign Key + CASCADE** | Auto-delete business records on family removal |
+| `audit_logs` | `user_id` FK | **Foreign Key** | Trace which user performed each action |
+
+### Why GIN Indexes on ARRAY Columns?
+
+The **Generic Eligibility Engine** uses PostgreSQL `ARRAY` columns (`health_tags`, `education_tags`, `business_tags`, `condition_tags`) to store multi-valued attributes. GIN (Generalized Inverted Index) enables:
+
+```sql
+-- Without GIN: Full table scan O(n)
+-- With GIN: Index lookup O(1)
+SELECT * FROM families WHERE health_tags @> ARRAY['cardiac'];
+```
+
+This makes scheme-to-family matching **instant** even with 10,000+ families — the engine queries `Family.health_tags.any('cardiac')` which PostgreSQL resolves via GIN in microseconds.
 
 ---
 
