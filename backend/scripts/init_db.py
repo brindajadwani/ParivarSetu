@@ -15,8 +15,15 @@ from app.models.complaint import Complaint
 from app.models.user import User
 from app.core.security import get_password_hash
 from app.services.family import sync_family_tags
+from app.core.database import Base
+from app.models.audit import AuditLog  # ensure all models are imported for create_all
 
 def init_seed_data():
+    # Create all tables if they don't exist (needed for fresh databases like Supabase)
+    print("0. Creating tables if not exist...")
+    Base.metadata.create_all(bind=engine)
+    print("   Tables created successfully!")
+
     db = SessionLocal()
     try:
         print("1. Checking & seeding departments for Gujarat...")
